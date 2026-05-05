@@ -10,7 +10,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar, Clock, MessageCircle, ArrowRight, CheckCircle, User, Video, Phone, Mic } from 'lucide-react';
 import SEO from '@/components/seo/SEO';
 import { base44 } from '@/api/base44Client';
-import { supabase } from '@/lib/supabase';
 
 const getSessionTypes = (coachId) => {
   const isSender = coachId === 'sender';
@@ -102,23 +101,48 @@ export default function Schedule() {
         status: 'pending'
       });
 
-      // Send email via Resend edge function
-      const { data: emailRes, error: emailError } = await supabase.functions.invoke('send-contact-email', {
-        body: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          message: formData.message || '',
-          sessionType: selectedSessionDetails.title,
-          sessionDuration: selectedSessionDetails.duration,
-          coachName: selectedCoachDetails.name,
+      // Send email via Resend API
+      const emailBody = `
+New Coaching Request Received
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CLIENT INFORMATION:
+Name: ${formData.name}
+Email: ${formData.email}
+Phone: ${formData.phone}
+
+SESSION DETAILS:
+Type: ${selectedSessionDetails.title}
+Duration: ${selectedSessionDetails.duration}
+Preferred Coach: ${selectedCoachDetails.name}
+
+MESSAGE:
+${formData.message || 'No additional message provided'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Reply directly to this client at: ${formData.email}
+      `.trim();
+
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_RESEND_API_KEY}`,
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          from: 'Tauber Solutions <dunger@taubersolutions.com>',
+          to: ['office@taubersolutions.com'],
+          reply_to: formData.email,
+          subject: `New Coaching Request - ${formData.name}`,
+          text: emailBody,
+        }),
       });
-      if (emailError) {
-        throw new Error(emailError.message);
-      }
-      if (emailRes?.error) {
-        throw new Error(emailRes.error);
+
+      if (!resendRes.ok) {
+        const errData = await resendRes.json();
+        throw new Error(errData.message || 'Failed to send email');
       }
 
       setIsSubmitting(false);
