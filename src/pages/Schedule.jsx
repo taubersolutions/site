@@ -101,48 +101,28 @@ export default function Schedule() {
         status: 'pending'
       });
 
-      // Send email via Resend API
-      const emailBody = `
-New Coaching Request Received
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-CLIENT INFORMATION:
-Name: ${formData.name}
-Email: ${formData.email}
-Phone: ${formData.phone}
-
-SESSION DETAILS:
-Type: ${selectedSessionDetails.title}
-Duration: ${selectedSessionDetails.duration}
-Preferred Coach: ${selectedCoachDetails.name}
-
-MESSAGE:
-${formData.message || 'No additional message provided'}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Reply directly to this client at: ${formData.email}
-      `.trim();
-
-      const resendRes = await fetch('https://api.resend.com/emails', {
+      // Send email via Resend (proxied through edge function)
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-contact-email`;
+      const emailRes = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_RESEND_API_KEY}`,
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Tauber Solutions <dunger@taubersolutions.com>',
-          to: ['office@taubersolutions.com'],
-          reply_to: formData.email,
-          subject: `New Coaching Request - ${formData.name}`,
-          text: emailBody,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message || '',
+          sessionType: selectedSessionDetails.title,
+          sessionDuration: selectedSessionDetails.duration,
+          coachName: selectedCoachDetails.name,
         }),
       });
 
-      if (!resendRes.ok) {
-        const errData = await resendRes.json();
-        throw new Error(errData.message || 'Failed to send email');
+      if (!emailRes.ok) {
+        const errData = await emailRes.json();
+        throw new Error(errData.error || 'Failed to send email');
       }
 
       setIsSubmitting(false);
