@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar, Clock, MessageCircle, ArrowRight, CheckCircle, User, Video, Phone, Mic } from 'lucide-react';
 import SEO from '@/components/seo/SEO';
 import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabase';
 
 const getSessionTypes = (coachId) => {
   const isSender = coachId === 'sender';
@@ -101,18 +102,23 @@ export default function Schedule() {
         status: 'pending'
       });
 
-      // Send email via Resend backend function
-      const emailRes = await base44.functions.invoke('sendContactEmail', {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        message: formData.message || '',
-        sessionType: selectedSessionDetails.title,
-        sessionDuration: selectedSessionDetails.duration,
-        coachName: selectedCoachDetails.name,
+      // Send email via Resend edge function
+      const { data: emailRes, error: emailError } = await supabase.functions.invoke('send-contact-email', {
+        body: {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          message: formData.message || '',
+          sessionType: selectedSessionDetails.title,
+          sessionDuration: selectedSessionDetails.duration,
+          coachName: selectedCoachDetails.name,
+        },
       });
-      if (emailRes.data?.error) {
-        throw new Error(emailRes.data.error);
+      if (emailError) {
+        throw new Error(emailError.message);
+      }
+      if (emailRes?.error) {
+        throw new Error(emailRes.error);
       }
 
       setIsSubmitting(false);
