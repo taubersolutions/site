@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         from: 'Tauber Solutions <onboarding@resend.dev>',
-        to: ['chaimtauber@gmail.com'], // ← replace with the real recipient email
+        to: ['office@taubersolutions.com'], // ← replace with the real recipient email
         subject: `New Coaching Request: ${sessionType} from ${name}`,
         html: `
           <h2>New Coaching Session Request</h2>
