@@ -23,15 +23,15 @@ export default function CommercialCalculator() {
 
   const [propertyValue, setPropertyValue] = useState('1500000');
   const [downPayment, setDownPayment] = useState('375000');
+  const [closingCost, setClosingCost] = useState('');
+  const [closingCostMode, setClosingCostMode] = useState('dollar');
+  const [initialInvestment, setInitialInvestment] = useState('');
   const [interestRate, setInterestRate] = useState('7.5');
   const [loanTerm, setLoanTerm] = useState('20');
   const [annualIncome, setAnnualIncome] = useState('180000');
   const [propertyTax, setPropertyTax] = useState('0');
   const [insurance, setInsurance] = useState('0');
   const [management, setManagement] = useState('0');
-  const [closingCost, setClosingCost] = useState('0');
-  const [closingCostType, setClosingCostType] = useState('$'); // '$' or '%'
-  const [initialInvestment, setInitialInvestment] = useState('0');
   const [showAmortization, setShowAmortization] = useState(false);
   const [viewMode, setViewMode] = useState('yearly');
 
@@ -53,10 +53,23 @@ export default function CommercialCalculator() {
     };
   }, [currency]);
 
+  const availableCurrencies = currencies;
   const currentCurrency = currencies.find(c => c.code === currency);
 
   const formatCurrency = (amount) => {
     return `${currentCurrency.symbol}${amount.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  };
+
+  const getClosingCostAmount = () => {
+    const value = parseFloat(propertyValue) || 0;
+    const cc = parseFloat(closingCost) || 0;
+    return closingCostMode === 'percent' ? (value * cc) / 100 : cc;
+  };
+
+  const getTotalDueAtClosing = () => {
+    const down = parseFloat(downPayment) || 0;
+    const initial = parseFloat(initialInvestment) || 0;
+    return down + getClosingCostAmount() + initial;
   };
 
   const calculateCommercialMortgage = () => {
@@ -117,26 +130,8 @@ export default function CommercialCalculator() {
     return { monthly: schedule, yearly: yearlySchedule };
   };
 
-  const getClosingCostAmount = () => {
-    const value = parseFloat(propertyValue) || 0;
-    const cc = parseFloat(closingCost) || 0;
-    if (closingCostType === '%') {
-      return value * (cc / 100);
-    }
-    return cc;
-  };
-
-  const totalDueAtClosing = () => {
-    const down = parseFloat(downPayment) || 0;
-    const initial = parseFloat(initialInvestment) || 0;
-    return down + getClosingCostAmount() + initial;
-  };
-
   const result = calculateCommercialMortgage();
   const amortization = calculateAmortization();
-
-  const inputClass = "h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
-  const inputClassNoPl = "h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
   return (
     <div className="pt-20">
@@ -168,7 +163,7 @@ export default function CommercialCalculator() {
             <div className="flex items-center gap-3 flex-wrap">
               <span className="text-white/80 font-medium">Select Your Currency:</span>
               <div className="flex gap-2 bg-white/10 p-1.5 rounded-lg flex-wrap">
-                {currencies.map((curr) => (
+                {availableCurrencies.map((curr) => (
                   <button
                     key={curr.code}
                     onClick={() => {
@@ -203,143 +198,244 @@ export default function CommercialCalculator() {
               </div>
 
               <div className="space-y-6 mb-8">
-                {/* Property Value */}
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">Property Value</Label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">{currentCurrency.symbol}</span>
-                    <Input type="text" value={propertyValue}
-                      onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '' || /^\d*\.?\d*$/.test(val)) setPropertyValue(val); }}
-                      onBlur={(e) => { const val = parseFloat(e.target.value.replace(/,/g, '')); setPropertyValue(isNaN(val) ? 0 : val); }}
-                      placeholder="1,500,000" className={inputClass} />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
+                      {currentCurrency.symbol}
+                    </span>
+                    <Input
+                      type="text"
+                      value={propertyValue}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/,/g, '');
+                        if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                          setPropertyValue(val);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = parseFloat(e.target.value.replace(/,/g, ''));
+                        setPropertyValue(isNaN(val) ? 0 : val);
+                      }}
+                      placeholder="1,500,000"
+                      className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                   </div>
                 </div>
-
-                {/* Down Payment */}
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">Down Payment</Label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">{currentCurrency.symbol}</span>
-                    <Input type="text" value={downPayment}
-                      onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '' || /^\d*\.?\d*$/.test(val)) setDownPayment(val); }}
-                      onBlur={(e) => { const val = parseFloat(e.target.value.replace(/,/g, '')); setDownPayment(isNaN(val) ? 0 : val); }}
-                      placeholder="375,000" className={inputClass} />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
+                      {currentCurrency.symbol}
+                    </span>
+                    <Input
+                      type="text"
+                      value={downPayment}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/,/g, '');
+                        if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                          setDownPayment(val);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = parseFloat(e.target.value.replace(/,/g, ''));
+                        setDownPayment(isNaN(val) ? 0 : val);
+                      }}
+                      placeholder="375,000"
+                      className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                   </div>
                 </div>
-
-                {/* Closing Cost with $ / % toggle */}
+                {/* Closing Cost */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <Label className="text-gray-300 text-sm">Closing Cost</Label>
-                    <div className="flex bg-[#1a2b4b]/70 rounded-lg p-1 gap-1">
+                    <div className="flex gap-1 bg-white/10 rounded-lg p-0.5">
                       <button
-                        onClick={() => setClosingCostType('$')}
-                        className={`px-3 py-1 text-sm font-semibold rounded-md transition-all ${closingCostType === '$' ? 'bg-[#C2983B] text-white' : 'text-gray-400 hover:text-white'}`}
-                      >
-                        {currentCurrency.symbol}
-                      </button>
-                      <button
-                        onClick={() => setClosingCostType('%')}
-                        className={`px-3 py-1 text-sm font-semibold rounded-md transition-all ${closingCostType === '%' ? 'bg-[#C2983B] text-white' : 'text-gray-400 hover:text-white'}`}
+                        onClick={() => setClosingCostMode('percent')}
+                        className={`px-3 py-1 text-xs rounded transition-colors ${closingCostMode === 'percent' ? 'bg-[#C2983B] text-white' : 'text-gray-400'}`}
                       >
                         %
+                      </button>
+                      <button
+                        onClick={() => setClosingCostMode('dollar')}
+                        className={`px-3 py-1 text-xs rounded transition-colors ${closingCostMode === 'dollar' ? 'bg-[#C2983B] text-white' : 'text-gray-400'}`}
+                      >
+                        {currentCurrency.symbol}
                       </button>
                     </div>
                   </div>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
-                      {closingCostType === '$' ? currentCurrency.symbol : '%'}
-                    </span>
-                    <Input type="text" value={closingCost}
+                    {closingCostMode === 'dollar' && (
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">{currentCurrency.symbol}</span>
+                    )}
+                    {closingCostMode === 'percent' && (
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">%</span>
+                    )}
+                    <Input
+                      type="text"
+                      value={closingCost}
                       onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '' || /^\d*\.?\d*$/.test(val)) setClosingCost(val); }}
-                      onBlur={(e) => { const val = parseFloat(e.target.value.replace(/,/g, '')); setClosingCost(isNaN(val) ? 0 : val); }}
-                      placeholder="0" className={inputClass} />
+                      onBlur={(e) => { const val = parseFloat(e.target.value.replace(/,/g, '')); setClosingCost(isNaN(val) ? '' : val); }}
+                      placeholder="0"
+                      className={`h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${closingCostMode === 'dollar' ? 'pl-10' : 'pr-10'}`}
+                    />
                   </div>
-                  {closingCostType === '%' && (parseFloat(closingCost) || 0) > 0 && (
+                  {closingCostMode === 'percent' && (parseFloat(closingCost) || 0) > 0 && (
                     <p className="text-gray-400 text-xs mt-1">= {formatCurrency(getClosingCostAmount())}</p>
                   )}
                 </div>
-
                 {/* Initial Investment */}
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">Initial Investment</Label>
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">{currentCurrency.symbol}</span>
-                    <Input type="text" value={initialInvestment}
+                    <Input
+                      type="text"
+                      value={initialInvestment}
                       onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '' || /^\d*\.?\d*$/.test(val)) setInitialInvestment(val); }}
-                      onBlur={(e) => { const val = parseFloat(e.target.value.replace(/,/g, '')); setInitialInvestment(isNaN(val) ? 0 : val); }}
-                      placeholder="0" className={inputClass} />
+                      onBlur={(e) => { const val = parseFloat(e.target.value.replace(/,/g, '')); setInitialInvestment(isNaN(val) ? '' : val); }}
+                      placeholder="0"
+                      className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                   </div>
                 </div>
-
-                {/* Interest Rate */}
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">Interest Rate (%)</Label>
-                  <Input type="text" value={interestRate}
-                    onChange={(e) => { const val = e.target.value; if (val === '' || /^\d*\.?\d*$/.test(val)) setInterestRate(val); }}
-                    onBlur={(e) => { const val = parseFloat(e.target.value); setInterestRate(isNaN(val) ? 0 : val); }}
-                    placeholder="7.5" className={inputClassNoPl} />
+                  <Input
+                    type="text"
+                    value={interestRate}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                        setInterestRate(val);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setInterestRate(isNaN(val) ? 0 : val);
+                    }}
+                    placeholder="7.5"
+                    className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                 </div>
-
-                {/* Loan Term */}
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">Loan Term (Years)</Label>
-                  <Input type="text" value={loanTerm}
-                    onChange={(e) => { const val = e.target.value; if (val === '' || /^\d*\.?\d*$/.test(val)) setLoanTerm(val); }}
-                    onBlur={(e) => { const val = parseFloat(e.target.value); setLoanTerm(isNaN(val) ? 0 : val); }}
-                    placeholder="20" className={inputClassNoPl} />
+                  <Input
+                    type="text"
+                    value={loanTerm}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                        setLoanTerm(val);
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const val = parseFloat(e.target.value);
+                      setLoanTerm(isNaN(val) ? 0 : val);
+                    }}
+                    placeholder="20"
+                    className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
                 </div>
-
-                {/* NOI */}
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">Net Annual Operating Income (NOI)</Label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">{currentCurrency.symbol}</span>
-                    <Input type="text" value={annualIncome}
-                      onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '' || /^\d*\.?\d*$/.test(val)) setAnnualIncome(val); }}
-                      onBlur={(e) => { const val = parseFloat(e.target.value.replace(/,/g, '')); setAnnualIncome(isNaN(val) ? 0 : val); }}
-                      placeholder="180,000" className={inputClass} />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
+                      {currentCurrency.symbol}
+                    </span>
+                    <Input
+                      type="text"
+                      value={annualIncome}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/,/g, '');
+                        if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                          setAnnualIncome(val);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = parseFloat(e.target.value.replace(/,/g, ''));
+                        setAnnualIncome(isNaN(val) ? 0 : val);
+                      }}
+                      placeholder="180,000"
+                      className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                   </div>
                 </div>
-
-                {/* Property Tax */}
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">Property Tax (Annual)</Label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">{currentCurrency.symbol}</span>
-                    <Input type="text" value={propertyTax}
-                      onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '' || /^\d*\.?\d*$/.test(val)) setPropertyTax(val); }}
-                      onBlur={(e) => { const val = parseFloat(e.target.value.replace(/,/g, '')); setPropertyTax(isNaN(val) ? 0 : val); }}
-                      placeholder="0" className={inputClass} />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
+                      {currentCurrency.symbol}
+                    </span>
+                    <Input
+                      type="text"
+                      value={propertyTax}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/,/g, '');
+                        if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                          setPropertyTax(val);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = parseFloat(e.target.value.replace(/,/g, ''));
+                        setPropertyTax(isNaN(val) ? 0 : val);
+                      }}
+                      placeholder="0"
+                      className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                   </div>
                 </div>
-
-                {/* Insurance */}
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">Insurance (Annual)</Label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">{currentCurrency.symbol}</span>
-                    <Input type="text" value={insurance}
-                      onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '' || /^\d*\.?\d*$/.test(val)) setInsurance(val); }}
-                      onBlur={(e) => { const val = parseFloat(e.target.value.replace(/,/g, '')); setInsurance(isNaN(val) ? 0 : val); }}
-                      placeholder="0" className={inputClass} />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
+                      {currentCurrency.symbol}
+                    </span>
+                    <Input
+                      type="text"
+                      value={insurance}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/,/g, '');
+                        if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                          setInsurance(val);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = parseFloat(e.target.value.replace(/,/g, ''));
+                        setInsurance(isNaN(val) ? 0 : val);
+                      }}
+                      placeholder="0"
+                      className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                   </div>
                 </div>
-
-                {/* Management */}
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">Management (Monthly)</Label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">{currentCurrency.symbol}</span>
-                    <Input type="text" value={management}
-                      onChange={(e) => { const val = e.target.value.replace(/,/g, ''); if (val === '' || /^\d*\.?\d*$/.test(val)) setManagement(val); }}
-                      onBlur={(e) => { const val = parseFloat(e.target.value.replace(/,/g, '')); setManagement(isNaN(val) ? 0 : val); }}
-                      placeholder="0" className={inputClass} />
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
+                      {currentCurrency.symbol}
+                    </span>
+                    <Input
+                      type="text"
+                      value={management}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/,/g, '');
+                        if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                          setManagement(val);
+                        }
+                      }}
+                      onBlur={(e) => {
+                        const val = parseFloat(e.target.value.replace(/,/g, ''));
+                        setManagement(isNaN(val) ? 0 : val);
+                      }}
+                      placeholder="0"
+                      className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                   </div>
                 </div>
               </div>
 
-              {/* Results */}
               <div className="pt-6 border-t border-white/10">
                 <p className="text-gray-400 text-sm mb-2">Principal & Interest:</p>
                 <p className="text-4xl font-bold text-white mb-4">
@@ -371,14 +467,18 @@ export default function CommercialCalculator() {
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-gray-400 text-xs mb-1">Loan Amount</p>
-                    <p className="text-lg font-medium text-white">{formatCurrency(result.principal)}</p>
+                    <p className="text-lg font-medium text-white">
+                      {formatCurrency(result.principal)}
+                    </p>
                   </div>
                   <div>
                     <p className="text-gray-400 text-xs mb-1">LTV Ratio</p>
-                    <p className="text-lg font-medium text-white">{result.ltv.toFixed(1)}%</p>
+                    <p className="text-lg font-medium text-white">
+                      {result.ltv.toFixed(1)}%
+                    </p>
                   </div>
                   <div>
                     <p className="text-gray-400 text-xs mb-1">DSCR</p>
@@ -388,30 +488,35 @@ export default function CommercialCalculator() {
                   </div>
                   <div>
                     <p className="text-gray-400 text-xs mb-1">Total Interest</p>
-                    <p className="text-lg font-medium text-red-400">{formatCurrency(result.totalInterest)}</p>
+                    <p className="text-lg font-medium text-red-400">
+                      {formatCurrency(result.totalInterest)}
+                    </p>
                   </div>
                 </div>
 
                 {/* Total Due at Closing */}
-                <div className="bg-white/5 rounded-lg p-4 mb-6">
-                  <p className="text-gray-400 text-xs mb-3">Total Due at Closing</p>
-                  <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Down Payment</span>
-                      <span className="text-white">{formatCurrency(parseFloat(downPayment) || 0)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Closing Cost</span>
-                      <span className="text-white">{formatCurrency(getClosingCostAmount())}</span>
-                    </div>
-                    <div className="flex justify-between col-span-2">
-                      <span className="text-gray-400">Initial Investment</span>
-                      <span className="text-white">{formatCurrency(parseFloat(initialInvestment) || 0)}</span>
-                    </div>
+                <div className="bg-white/5 rounded-lg p-4 mb-6 flex flex-col md:flex-row gap-4">
+                  <div className="md:w-1/3 flex flex-col justify-center">
+                    <p className="text-gray-400 text-sm mb-1">Total Due at Closing:</p>
+                    <p className="text-3xl font-bold text-[#C2983B]">{formatCurrency(getTotalDueAtClosing())}</p>
                   </div>
-                  <div className="border-t border-white/10 pt-3 flex justify-between items-center">
-                    <span className="text-white font-semibold">Total Due at Closing</span>
-                    <span className="text-2xl font-bold text-[#C2983B]">{formatCurrency(totalDueAtClosing())}</span>
+                  <div className="hidden md:block w-px bg-white/10"></div>
+                  <div className="flex-1">
+                    <p className="text-gray-400 text-xs mb-3">Breakdown</p>
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Down Payment</span>
+                        <span className="text-white">{formatCurrency(parseFloat(downPayment) || 0)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Closing Cost</span>
+                        <span className="text-white">{formatCurrency(getClosingCostAmount())}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Initial Investment</span>
+                        <span className="text-white">{formatCurrency(parseFloat(initialInvestment) || 0)}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -427,13 +532,17 @@ export default function CommercialCalculator() {
                     <div className="flex gap-2 mb-4">
                       <button
                         onClick={() => setViewMode('yearly')}
-                        className={`flex-1 py-2 rounded-lg transition-colors ${viewMode === 'yearly' ? 'bg-[#C2983B] text-white' : 'bg-[#1a2b4b]/50 text-gray-400'}`}
+                        className={`flex-1 py-2 rounded-lg transition-colors ${
+                          viewMode === 'yearly' ? 'bg-[#C2983B] text-white' : 'bg-[#1a2b4b]/50 text-gray-400'
+                        }`}
                       >
                         Yearly
                       </button>
                       <button
                         onClick={() => setViewMode('monthly')}
-                        className={`flex-1 py-2 rounded-lg transition-colors ${viewMode === 'monthly' ? 'bg-[#C2983B] text-white' : 'bg-[#1a2b4b]/50 text-gray-400'}`}
+                        className={`flex-1 py-2 rounded-lg transition-colors ${
+                          viewMode === 'monthly' ? 'bg-[#C2983B] text-white' : 'bg-[#1a2b4b]/50 text-gray-400'
+                        }`}
                       >
                         Monthly
                       </button>
