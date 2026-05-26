@@ -645,9 +645,9 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
   const currentCurrencyObj = currencies.find((c) => c.code === currency);
   const sym = currentCurrencyObj.symbol;
 
-  const [propertyValue, setPropertyValue] = useState('1500000');
+  const [propertyValue, setPropertyValue] = useState('1,500,000');
   const [downPaymentMode, setDownPaymentMode] = useState('dollar');
-  const [downPaymentDollar, setDownPaymentDollar] = useState('375000');
+  const [downPaymentDollar, setDownPaymentDollar] = useState('375,000');
   const [downPaymentPercent, setDownPaymentPercent] = useState('25');
   const [interestRate, setInterestRate] = useState('7.5');
   const [loanTerm, setLoanTerm] = useState('20');
