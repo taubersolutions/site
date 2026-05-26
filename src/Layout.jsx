@@ -15,6 +15,7 @@ const getNavigation = () => {
     { name: 'Services', page: 'Services' },
     { name: 'Our Coaches', page: isUKSession ? 'UKCoaches' : 'Coaches' },
     { name: 'Free Tools', page: 'Tools' },
+    { name: 'Blog', page: 'Blog' },
     { name: 'Schedule Now', page: 'Schedule' },
     { name: 'Pay', page: 'Pay' },
   ];
