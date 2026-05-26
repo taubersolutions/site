@@ -615,6 +615,32 @@ function MortgageCalculator({ formatCurrency, currency }) {
 
 }
 
+const parseNumTools = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
+
+const inputClsBase = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+const inputClsBaseR = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+const inputClsBaseP = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+
+function NI({ value, onChange, onBlur, placeholder, prefix, suffix }) {
+  return (
+    <div className="relative">
+      {prefix && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{prefix}</span>}
+      {suffix && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{suffix}</span>}
+      <Input type="text" value={value} onChange={onChange} onBlur={onBlur} placeholder={placeholder}
+        className={prefix ? inputClsBase : suffix ? inputClsBaseR : inputClsBaseP} />
+    </div>
+  );
+}
+
+function MR({ label, value, highlight, isNeg }) {
+  return (
+    <div className="flex justify-between items-center py-2 border-b border-white/5">
+      <span className="text-gray-400 text-sm">{label}</span>
+      <span className={`font-semibold text-sm ${highlight ? 'text-green-400' : isNeg ? 'text-red-400' : 'text-white'}`}>{value}</span>
+    </div>
+  );
+}
+
 function CommercialMortgageCalculator({ formatCurrency, currency }) {
   const currentCurrencyObj = currencies.find((c) => c.code === currency);
   const sym = currentCurrencyObj.symbol;
@@ -716,25 +742,11 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
   const fmt = (n) => `${sym}${(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
   const fmtPct = (n) => `${(n || 0).toFixed(2)}%`;
 
-  const inputCls = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
-  const inputClsR = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
-  const inputClsP = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+  
+  
+  
 
-  const NI = ({ value, onChange, onBlur, placeholder, prefix, suffix }) => (
-    <div className="relative">
-      {prefix && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{prefix}</span>}
-      {suffix && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{suffix}</span>}
-      <Input type="text" value={value} onChange={onChange} onBlur={onBlur} placeholder={placeholder}
-        className={prefix ? inputCls : suffix ? inputClsR : inputClsP} />
-    </div>
-  );
 
-  const MR = ({ label, value, highlight, isNeg }) => (
-    <div className="flex justify-between items-center py-2 border-b border-white/5">
-      <span className="text-gray-400 text-sm">{label}</span>
-      <span className={`font-semibold text-sm ${highlight ? 'text-[#C2983B]' : isNeg ? 'text-red-400' : 'text-white'}`}>{value}</span>
-    </div>
-  );
 
   return (
     <div className="bg-[#2c3e50] rounded-xl p-8 border border-white/10">
@@ -897,18 +909,18 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
           <div className="bg-white/5 rounded-lg p-4">
             <h4 className="text-[#C2983B] font-semibold text-sm mb-3">Current</h4>
             <MR label="NOI" value={fmt(currentNOI)} />
-            <MR label="Cap Rate" value={fmtPct(getCapRate(currentNOI))} highlight />
+            <MR label="Cap Rate" value={fmtPct(getCapRate(currentNOI))} />
             <MR label="Net Profit" value={fmt(getNetProfit(currentNOI))} isNeg={getNetProfit(currentNOI) < 0} />
             <MR label="Cash on Cash" value={fmtPct(getCashOnCash(currentNOI))} highlight={getCashOnCash(currentNOI) > 0} isNeg={getCashOnCash(currentNOI) < 0} />
-            <MR label="DSCR" value={`${getDSCR(currentNOI).toFixed(2)}x`} highlight={getDSCR(currentNOI) >= 1.25} isNeg={getDSCR(currentNOI) < 1} />
+            <MR label="DSCR" value={`${getDSCR(currentNOI).toFixed(2)}x`} highlight={getDSCR(currentNOI) >= 1.25} isNeg={getDSCR(currentNOI) < 1.25 && getDSCR(currentNOI) > 0} />
           </div>
           <div className="bg-white/5 rounded-lg p-4">
             <h4 className="text-[#C2983B] font-semibold text-sm mb-3">Pro Forma</h4>
             <MR label="NOI" value={fmt(proFormaNOI)} />
-            <MR label="Cap Rate" value={fmtPct(getCapRate(proFormaNOI))} highlight />
+            <MR label="Cap Rate" value={fmtPct(getCapRate(proFormaNOI))} />
             <MR label="Net Profit" value={fmt(getNetProfit(proFormaNOI))} isNeg={getNetProfit(proFormaNOI) < 0} />
             <MR label="Cash on Cash" value={fmtPct(getCashOnCash(proFormaNOI))} highlight={getCashOnCash(proFormaNOI) > 0} isNeg={getCashOnCash(proFormaNOI) < 0} />
-            <MR label="DSCR" value={`${getDSCR(proFormaNOI).toFixed(2)}x`} highlight={getDSCR(proFormaNOI) >= 1.25} isNeg={getDSCR(proFormaNOI) < 1} />
+            <MR label="DSCR" value={`${getDSCR(proFormaNOI).toFixed(2)}x`} highlight={getDSCR(proFormaNOI) >= 1.25} isNeg={getDSCR(proFormaNOI) < 1.25 && getDSCR(proFormaNOI) > 0} />
           </div>
         </div>
 
