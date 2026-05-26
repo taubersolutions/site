@@ -492,10 +492,8 @@ export default function CommercialCalculator() {
                       <div className="space-y-1">
                         <MetricRow label="Down Payment" value={formatCurrency(getDownPayment())} />
                         <MetricRow label="Closing Cost" value={formatCurrency(getClosingCostAmount())} />
+                        <MetricRow label="Initial Investment" value={formatCurrency(parseNum(initialInvestment) || 0)} />
                       </div>
-                    </div>
-                    <div className="space-y-1 mt-auto pt-2 border-t border-white/5">
-                      <MetricRow label="Initial Investment" value={formatCurrency(parseNum(initialInvestment) || 0)} />
                     </div>
                   </div>
 
