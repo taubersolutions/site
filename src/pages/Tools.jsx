@@ -896,15 +896,19 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
 
         {/* Investment + Current + Pro Forma */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-white/5 rounded-lg p-4">
-            <h4 className="text-[#C2983B] font-semibold text-sm mb-3">Investment</h4>
-            <div className="mb-3">
-              <p className="text-gray-400 text-xs mb-1">Total Due at Closing</p>
-              <p className="text-xl font-bold text-white">{fmt(getTotalDueAtClosing())}</p>
+          <div className="bg-white/5 rounded-lg p-4 flex flex-col justify-between">
+            <div>
+              <h4 className="text-[#C2983B] font-semibold text-sm mb-3">Investment</h4>
+              <div className="mb-3">
+                <p className="text-gray-400 text-xs mb-1">Total Due at Closing</p>
+                <p className="text-xl font-bold text-white">{fmt(getTotalDueAtClosing())}</p>
+              </div>
             </div>
-            <MR label="Down Payment" value={fmt(getDownPayment())} />
-            <MR label="Closing Cost" value={fmt(getClosingCostAmount())} />
-            <MR label="Initial Investment" value={fmt(parseFloat(initialInvestment) || 0)} />
+            <div>
+              <MR label="Down Payment" value={fmt(getDownPayment())} />
+              <MR label="Closing Cost" value={fmt(getClosingCostAmount())} />
+              <MR label="Initial Investment" value={fmt(parseNumTools(initialInvestment) || 0)} />
+            </div>
           </div>
           <div className="bg-white/5 rounded-lg p-4">
             <h4 className="text-[#C2983B] font-semibold text-sm mb-3">Current</h4>
