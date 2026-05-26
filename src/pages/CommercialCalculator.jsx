@@ -75,27 +75,27 @@ export default function CommercialCalculator() {
 
   // Derived values
   const getDownPayment = () => {
-    const price = parseFloat(propertyValue) || 0;
-    if (downPaymentMode === 'percent') return price * ((parseFloat(downPaymentPercent) || 0) / 100);
-    if (downPaymentMode === 'ltv') return price * ((100 - (parseFloat(downPaymentPercent) || 0)) / 100);
-    return parseFloat(downPaymentDollar) || 0;
+    const price = parseNum(propertyValue) || 0;
+    if (downPaymentMode === 'percent') return price * ((parseNum(downPaymentPercent) || 0) / 100);
+    if (downPaymentMode === 'ltv') return price * ((100 - (parseNum(downPaymentPercent) || 0)) / 100);
+    return parseNum(downPaymentDollar) || 0;
   };
 
   const getClosingCostAmount = () => {
-    const value = parseFloat(propertyValue) || 0;
-    const cc = parseFloat(closingCost) || 0;
+    const value = parseNum(propertyValue) || 0;
+    const cc = parseNum(closingCost) || 0;
     return closingCostMode === 'percent' ? (value * cc) / 100 : cc;
   };
 
   const getTotalDueAtClosing = () =>
-    getDownPayment() + getClosingCostAmount() + (parseFloat(initialInvestment) || 0);
+    getDownPayment() + getClosingCostAmount() + (parseNum(initialInvestment) || 0);
 
-  const getLoanAmount = () => (parseFloat(propertyValue) || 0) - getDownPayment();
+  const getLoanAmount = () => (parseNum(propertyValue) || 0) - getDownPayment();
 
   const getMonthlyPayment = () => {
     const principal = getLoanAmount();
-    const r = (parseFloat(interestRate) || 0) / 100 / 12;
-    const n = (parseFloat(loanTerm) || 0) * 12;
+    const r = (parseNum(interestRate) || 0) / 100 / 12;
+    const n = (parseNum(loanTerm) || 0) * 12;
     if (r === 0 || n === 0) return 0;
     return principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
   };
@@ -103,21 +103,21 @@ export default function CommercialCalculator() {
   const getAnnualDebtService = () => getMonthlyPayment() * 12;
 
   const getCurrentNOI = () => {
-    if (currentNoiEdited) return parseFloat(currentNoiOverride) || 0;
-    const income = parseFloat(currentIncome) || 0;
-    const expenses = parseFloat(currentExpenses) || 0;
+    if (currentNoiEdited) return parseNum(currentNoiOverride) || 0;
+    const income = parseNum(currentIncome) || 0;
+    const expenses = parseNum(currentExpenses) || 0;
     return income - expenses;
   };
 
   const getProFormaNOI = () => {
-    if (proFormaNoiEdited) return parseFloat(proFormaNoiOverride) || 0;
-    const income = parseFloat(proFormaIncome) || 0;
-    const expenses = parseFloat(proFormaExpenses) || 0;
+    if (proFormaNoiEdited) return parseNum(proFormaNoiOverride) || 0;
+    const income = parseNum(proFormaIncome) || 0;
+    const expenses = parseNum(proFormaExpenses) || 0;
     return income - expenses;
   };
 
   const getCapRate = (noi) => {
-    const value = parseFloat(propertyValue) || 0;
+    const value = parseNum(propertyValue) || 0;
     return value > 0 ? (noi / value) * 100 : 0;
   };
 
@@ -135,14 +135,14 @@ export default function CommercialCalculator() {
   };
 
   const getTotalInterest = () => {
-    const n = (parseFloat(loanTerm) || 0) * 12;
+    const n = (parseNum(loanTerm) || 0) * 12;
     return getMonthlyPayment() * n - getLoanAmount();
   };
 
   const calculateAmortization = () => {
     const principal = getLoanAmount();
-    const r = (parseFloat(interestRate) || 0) / 100 / 12;
-    const n = (parseFloat(loanTerm) || 0) * 12;
+    const r = (parseNum(interestRate) || 0) / 100 / 12;
+    const n = (parseNum(loanTerm) || 0) * 12;
     const monthlyPayment = getMonthlyPayment();
     let balance = principal;
     const schedule = [];
@@ -152,7 +152,7 @@ export default function CommercialCalculator() {
       balance -= principalPayment;
       schedule.push({ month, year: Math.ceil(month / 12), principal: principalPayment, interest: interestPayment, balance: Math.max(0, balance) });
     }
-    const term = parseFloat(loanTerm) || 0;
+    const term = parseNum(loanTerm) || 0;
     const yearlySchedule = [];
     for (let year = 1; year <= term; year++) {
       const yearData = schedule.filter(m => m.year === year);
@@ -189,14 +189,24 @@ export default function CommercialCalculator() {
     </div>
   );
 
+  const parseNum = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
+
   const handleNumChange = (setter) => (e) => {
-    const val = e.target.value.replace(/,/g, '');
-    if (val === '' || /^\d*\.?\d*$/.test(val)) setter(val);
+    const raw = e.target.value.replace(/,/g, '');
+    if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+      if (raw === '' || raw === '.') { setter(raw); return; }
+      const num = parseFloat(raw);
+      if (!isNaN(num)) {
+        const formatted = Number.isInteger(num) ? num.toLocaleString('en-US') : raw;
+        setter(formatted);
+      }
+    }
   };
 
   const handleNumBlur = (setter) => (e) => {
-    const val = parseFloat(e.target.value.replace(/,/g, ''));
-    setter(isNaN(val) ? '' : val);
+    const raw = e.target.value.replace(/,/g, '');
+    const val = parseFloat(raw);
+    setter(isNaN(val) ? '' : val.toLocaleString('en-US'));
   };
 
   const MetricRow = ({ label, value, highlight, isNegative }) => (
@@ -340,7 +350,7 @@ export default function CommercialCalculator() {
                           ? <NumInput prefix={currentCurrency.symbol} value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
                           : <NumInput suffix="%" value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
                         }
-                        {closingCostMode === 'percent' && (parseFloat(closingCost) || 0) > 0 && (
+                        {closingCostMode === 'percent' && (parseNum(closingCost) || 0) > 0 && (
                           <p className="text-gray-400 text-xs mt-1">= {formatCurrency(getClosingCostAmount())}</p>
                         )}
                       </div>
@@ -382,7 +392,7 @@ export default function CommercialCalculator() {
                         onBlur={handleNumBlur(setCurrentNoiOverride)}
                         placeholder={formatCurrency(getCurrentNOI()).replace(currentCurrency.symbol, '')}
                       />
-                      {!currentNoiEdited && (parseFloat(currentIncome) || parseFloat(currentExpenses)) ? (
+                      {!currentNoiEdited && (parseNum(currentIncome) || parseNum(currentExpenses)) ? (
                         <p className="text-gray-400 text-xs mt-1">Auto-calculated (Income - Expenses)</p>
                       ) : currentNoiEdited ? (
                         <button onClick={() => { setCurrentNoiEdited(false); setCurrentNoiOverride(''); }}
@@ -418,7 +428,7 @@ export default function CommercialCalculator() {
                         onBlur={handleNumBlur(setProFormaNoiOverride)}
                         placeholder={formatCurrency(getProFormaNOI()).replace(currentCurrency.symbol, '')}
                       />
-                      {!proFormaNoiEdited && (parseFloat(proFormaIncome) || parseFloat(proFormaExpenses)) ? (
+                      {!proFormaNoiEdited && (parseNum(proFormaIncome) || parseNum(proFormaExpenses)) ? (
                         <p className="text-gray-400 text-xs mt-1">Auto-calculated (Income - Expenses)</p>
                       ) : proFormaNoiEdited ? (
                         <button onClick={() => { setProFormaNoiEdited(false); setProFormaNoiOverride(''); }}
@@ -446,7 +456,7 @@ export default function CommercialCalculator() {
                   </div>
                   <div className="bg-white/5 rounded-lg p-4">
                     <p className="text-gray-400 text-xs mb-1">LTV Ratio</p>
-                    <p className="text-lg font-semibold text-white">{formatPercent(getLoanAmount() / (parseFloat(propertyValue) || 1) * 100)}</p>
+                    <p className="text-lg font-semibold text-white">{formatPercent(getLoanAmount() / (parseNum(propertyValue) || 1) * 100)}</p>
                   </div>
                   <div className="bg-white/5 rounded-lg p-4">
                     <p className="text-gray-400 text-xs mb-1">Annual Debt Service</p>
@@ -462,16 +472,20 @@ export default function CommercialCalculator() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 
                   {/* Investment */}
-                  <div className="bg-white/5 rounded-lg p-5">
-                    <h4 className="text-[#C2983B] font-semibold mb-4">Investment</h4>
-                    <div className="mb-4">
-                      <p className="text-gray-400 text-xs mb-1">Total Due at Closing</p>
-                      <p className="text-2xl font-bold text-white">{formatCurrency(getTotalDueAtClosing())}</p>
+                  <div className="bg-white/5 rounded-lg p-5 flex flex-col justify-between">
+                    <div>
+                      <h4 className="text-[#C2983B] font-semibold mb-4">Investment</h4>
+                      <div className="mb-4">
+                        <p className="text-gray-400 text-xs mb-1">Total Due at Closing</p>
+                        <p className="text-2xl font-bold text-white">{formatCurrency(getTotalDueAtClosing())}</p>
+                      </div>
+                      <div className="space-y-1">
+                        <MetricRow label="Down Payment" value={formatCurrency(getDownPayment())} />
+                        <MetricRow label="Closing Cost" value={formatCurrency(getClosingCostAmount())} />
+                      </div>
                     </div>
-                    <div className="space-y-1">
-                      <MetricRow label="Down Payment" value={formatCurrency(getDownPayment())} />
-                      <MetricRow label="Closing Cost" value={formatCurrency(getClosingCostAmount())} />
-                      <MetricRow label="Initial Investment" value={formatCurrency(parseFloat(initialInvestment) || 0)} />
+                    <div className="space-y-1 mt-auto pt-2 border-t border-white/5">
+                      <MetricRow label="Initial Investment" value={formatCurrency(parseNum(initialInvestment) || 0)} />
                     </div>
                   </div>
 
