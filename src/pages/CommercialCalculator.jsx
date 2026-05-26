@@ -54,9 +54,9 @@ export default function CommercialCalculator() {
   });
 
   // Core fields
-  const [propertyValue, setPropertyValue] = useState('1500000');
+  const [propertyValue, setPropertyValue] = useState('1,500,000');
   const [downPaymentMode, setDownPaymentMode] = useState('dollar');
-  const [downPaymentDollar, setDownPaymentDollar] = useState('375000');
+  const [downPaymentDollar, setDownPaymentDollar] = useState('375,000');
   const [downPaymentPercent, setDownPaymentPercent] = useState('25');
   const [interestRate, setInterestRate] = useState('7.5');
   const [loanTerm, setLoanTerm] = useState('20');
