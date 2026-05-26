@@ -489,11 +489,11 @@ export default function CommercialCalculator() {
                         <p className="text-gray-400 text-xs mb-1">Total Due at Closing</p>
                         <p className="text-2xl font-bold text-white">{formatCurrency(getTotalDueAtClosing())}</p>
                       </div>
-                      <div className="space-y-1">
-                        <MetricRow label="Down Payment" value={formatCurrency(getDownPayment())} />
-                        <MetricRow label="Closing Cost" value={formatCurrency(getClosingCostAmount())} />
-                        <MetricRow label="Initial Investment" value={formatCurrency(parseNum(initialInvestment) || 0)} />
-                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <MetricRow label="Down Payment" value={formatCurrency(getDownPayment())} />
+                      <MetricRow label="Closing Cost" value={formatCurrency(getClosingCostAmount())} />
+                      <MetricRow label="Initial Investment" value={formatCurrency(parseNum(initialInvestment) || 0)} />
                     </div>
                   </div>
 
