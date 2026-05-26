@@ -14,6 +14,8 @@ const currencies = [
   { code: 'GBP', symbol: '£', name: 'British Pound' }
 ];
 
+const parseNum = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
+
 export default function CommercialCalculator() {
   const isUKSession = sessionStorage.getItem('isUKSession') === 'true';
   const [currency, setCurrency] = useState(() => {
@@ -188,8 +190,6 @@ export default function CommercialCalculator() {
       />
     </div>
   );
-
-  const parseNum = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
 
   const handleNumChange = (setter) => (e) => {
     const raw = e.target.value.replace(/,/g, '');
