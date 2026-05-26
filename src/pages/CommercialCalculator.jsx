@@ -16,6 +16,36 @@ const currencies = [
 
 const parseNum = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
 
+const inputClass = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+const inputClassRight = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+const inputClassPlain = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+
+function NumInput({ value, onChange, onBlur, placeholder, prefix, suffix }) {
+  return (
+    <div className="relative">
+      {prefix && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{prefix}</span>}
+      {suffix && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{suffix}</span>}
+      <Input
+        type="text"
+        value={value}
+        onChange={onChange}
+        onBlur={onBlur}
+        placeholder={placeholder}
+        className={prefix ? inputClass : suffix ? inputClassRight : inputClassPlain}
+      />
+    </div>
+  );
+}
+
+function MetricRow({ label, value, highlight, isNegative }) {
+  return (
+    <div className="flex justify-between items-center py-2 border-b border-white/5">
+      <span className="text-gray-400 text-sm">{label}</span>
+      <span className={`font-semibold text-sm ${highlight ? 'text-green-400' : isNegative ? 'text-red-400' : 'text-white'}`}>{value}</span>
+    </div>
+  );
+}
+
 export default function CommercialCalculator() {
   const isUKSession = sessionStorage.getItem('isUKSession') === 'true';
   const [currency, setCurrency] = useState(() => {
@@ -172,24 +202,9 @@ export default function CommercialCalculator() {
   const currentNOI = getCurrentNOI();
   const proFormaNOI = getProFormaNOI();
 
-  const inputClass = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
-  const inputClassRight = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
-  const inputClassPlain = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
-  const NumInput = ({ value, onChange, onBlur, placeholder, prefix, suffix }) => (
-    <div className="relative">
-      {prefix && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{prefix}</span>}
-      {suffix && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{suffix}</span>}
-      <Input
-        type="text"
-        value={value}
-        onChange={onChange}
-        onBlur={onBlur}
-        placeholder={placeholder}
-        className={prefix ? inputClass : suffix ? inputClassRight : inputClassPlain}
-      />
-    </div>
-  );
+
+
 
   const handleNumChange = (setter) => (e) => {
     const raw = e.target.value.replace(/,/g, '');
@@ -209,12 +224,7 @@ export default function CommercialCalculator() {
     setter(isNaN(val) ? '' : val.toLocaleString('en-US'));
   };
 
-  const MetricRow = ({ label, value, highlight, isNegative }) => (
-    <div className="flex justify-between items-center py-2 border-b border-white/5">
-      <span className="text-gray-400 text-sm">{label}</span>
-      <span className={`font-semibold text-sm ${highlight ? 'text-[#C2983B]' : isNegative ? 'text-red-400' : 'text-white'}`}>{value}</span>
-    </div>
-  );
+
 
   return (
     <div className="pt-20">
@@ -494,10 +504,10 @@ export default function CommercialCalculator() {
                     <h4 className="text-[#C2983B] font-semibold mb-4">Current</h4>
                     <div className="space-y-1">
                       <MetricRow label="NOI" value={formatCurrency(currentNOI)} />
-                      <MetricRow label="Cap Rate" value={formatPercent(getCapRate(currentNOI))} highlight />
+                      <MetricRow label="Cap Rate" value={formatPercent(getCapRate(currentNOI))} />
                       <MetricRow label="Net Profit" value={formatCurrency(getNetProfit(currentNOI))} isNegative={getNetProfit(currentNOI) < 0} />
                       <MetricRow label="Cash on Cash" value={formatPercent(getCashOnCash(currentNOI))} highlight={getCashOnCash(currentNOI) > 0} isNegative={getCashOnCash(currentNOI) < 0} />
-                      <MetricRow label="DSCR" value={`${getDSCR(currentNOI).toFixed(2)}x`} highlight={getDSCR(currentNOI) >= 1.25} isNegative={getDSCR(currentNOI) < 1} />
+                      <MetricRow label="DSCR" value={`${getDSCR(currentNOI).toFixed(2)}x`} highlight={getDSCR(currentNOI) >= 1.25} isNegative={getDSCR(currentNOI) < 1.25 && getDSCR(currentNOI) > 0} />
                     </div>
                   </div>
 
@@ -506,10 +516,10 @@ export default function CommercialCalculator() {
                     <h4 className="text-[#C2983B] font-semibold mb-4">Pro Forma</h4>
                     <div className="space-y-1">
                       <MetricRow label="NOI" value={formatCurrency(proFormaNOI)} />
-                      <MetricRow label="Cap Rate" value={formatPercent(getCapRate(proFormaNOI))} highlight />
+                      <MetricRow label="Cap Rate" value={formatPercent(getCapRate(proFormaNOI))} />
                       <MetricRow label="Net Profit" value={formatCurrency(getNetProfit(proFormaNOI))} isNegative={getNetProfit(proFormaNOI) < 0} />
                       <MetricRow label="Cash on Cash" value={formatPercent(getCashOnCash(proFormaNOI))} highlight={getCashOnCash(proFormaNOI) > 0} isNegative={getCashOnCash(proFormaNOI) < 0} />
-                      <MetricRow label="DSCR" value={`${getDSCR(proFormaNOI).toFixed(2)}x`} highlight={getDSCR(proFormaNOI) >= 1.25} isNegative={getDSCR(proFormaNOI) < 1} />
+                      <MetricRow label="DSCR" value={`${getDSCR(proFormaNOI).toFixed(2)}x`} highlight={getDSCR(proFormaNOI) >= 1.25} isNegative={getDSCR(proFormaNOI) < 1.25 && getDSCR(proFormaNOI) > 0} />
                     </div>
                   </div>
                 </div>
