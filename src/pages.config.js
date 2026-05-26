@@ -4,6 +4,7 @@ import AdminLegal from './pages/AdminLegal';
 import AdminResources from './pages/AdminResources';
 import AdminSettings from './pages/AdminSettings';
 import Affiliates from './pages/Affiliates';
+import Blog from './pages/Blog';
 import Coaches from './pages/Coaches';
 import CommercialCalculator from './pages/CommercialCalculator';
 import Community from './pages/Community';
@@ -33,6 +34,7 @@ export const PAGES = {
     "AdminResources": AdminResources,
     "AdminSettings": AdminSettings,
     "Affiliates": Affiliates,
+    "Blog": Blog,
     "Coaches": Coaches,
     "CommercialCalculator": CommercialCalculator,
     "Community": Community,
