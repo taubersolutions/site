@@ -617,74 +617,124 @@ function MortgageCalculator({ formatCurrency, currency }) {
 
 function CommercialMortgageCalculator({ formatCurrency, currency }) {
   const currentCurrencyObj = currencies.find((c) => c.code === currency);
+  const sym = currentCurrencyObj.symbol;
+
   const [propertyValue, setPropertyValue] = useState('1500000');
-  const [downPayment, setDownPayment] = useState('375000');
+  const [downPaymentMode, setDownPaymentMode] = useState('dollar');
+  const [downPaymentDollar, setDownPaymentDollar] = useState('375000');
+  const [downPaymentPercent, setDownPaymentPercent] = useState('25');
   const [interestRate, setInterestRate] = useState('7.5');
   const [loanTerm, setLoanTerm] = useState('20');
-  const [annualIncome, setAnnualIncome] = useState('180000');
+
+  const [showAdditional, setShowAdditional] = useState(false);
+  const [closingCost, setClosingCost] = useState('');
+  const [closingCostMode, setClosingCostMode] = useState('dollar');
+  const [initialInvestment, setInitialInvestment] = useState('');
+
+  const [currentIncome, setCurrentIncome] = useState('');
+  const [currentExpenses, setCurrentExpenses] = useState('');
+  const [currentNoiOverride, setCurrentNoiOverride] = useState('');
+  const [currentNoiEdited, setCurrentNoiEdited] = useState(false);
+
+  const [proFormaIncome, setProFormaIncome] = useState('');
+  const [proFormaExpenses, setProFormaExpenses] = useState('');
+  const [proFormaNoiOverride, setProFormaNoiOverride] = useState('');
+  const [proFormaNoiEdited, setProFormaNoiEdited] = useState(false);
+
   const [showAmortization, setShowAmortization] = useState(false);
   const [viewMode, setViewMode] = useState('yearly');
 
-  const calculateCommercialMortgage = () => {
-    const value = parseFloat(propertyValue) || 0;
-    const down = parseFloat(downPayment) || 0;
-    const rate = parseFloat(interestRate) || 0;
-    const term = parseFloat(loanTerm) || 0;
-    const income = parseFloat(annualIncome) || 0;
-    const principal = value - down;
-    const r = rate / 100 / 12;
-    const n = term * 12;
-    const monthlyPayment = principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
-    const annualDebtService = monthlyPayment * 12;
-    const dscr = income / annualDebtService;
-    const totalPayment = monthlyPayment * n;
-    const totalInterest = totalPayment - principal;
-    const ltv = principal / value * 100;
-
-    return { monthlyPayment, totalPayment, totalInterest, principal, dscr, ltv };
+  const handleNumChange = (setter) => (e) => {
+    const val = e.target.value.replace(/,/g, '');
+    if (val === '' || /^\d*\.?\d*$/.test(val)) setter(val);
   };
+  const handleNumBlur = (setter) => (e) => {
+    const val = parseFloat(e.target.value.replace(/,/g, ''));
+    setter(isNaN(val) ? '' : val);
+  };
+
+  const getDownPayment = () => {
+    const price = parseFloat(propertyValue) || 0;
+    if (downPaymentMode === 'percent') return price * ((parseFloat(downPaymentPercent) || 0) / 100);
+    if (downPaymentMode === 'ltv') return price * ((100 - (parseFloat(downPaymentPercent) || 0)) / 100);
+    return parseFloat(downPaymentDollar) || 0;
+  };
+  const getClosingCostAmount = () => {
+    const value = parseFloat(propertyValue) || 0;
+    const cc = parseFloat(closingCost) || 0;
+    return closingCostMode === 'percent' ? (value * cc) / 100 : cc;
+  };
+  const getTotalDueAtClosing = () => getDownPayment() + getClosingCostAmount() + (parseFloat(initialInvestment) || 0);
+  const getLoanAmount = () => (parseFloat(propertyValue) || 0) - getDownPayment();
+  const getMonthlyPayment = () => {
+    const principal = getLoanAmount();
+    const r = (parseFloat(interestRate) || 0) / 100 / 12;
+    const n = (parseFloat(loanTerm) || 0) * 12;
+    if (r === 0 || n === 0) return 0;
+    return principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+  };
+  const getAnnualDebtService = () => getMonthlyPayment() * 12;
+  const getCurrentNOI = () => {
+    if (currentNoiEdited) return parseFloat(currentNoiOverride) || 0;
+    return (parseFloat(currentIncome) || 0) - (parseFloat(currentExpenses) || 0);
+  };
+  const getProFormaNOI = () => {
+    if (proFormaNoiEdited) return parseFloat(proFormaNoiOverride) || 0;
+    return (parseFloat(proFormaIncome) || 0) - (parseFloat(proFormaExpenses) || 0);
+  };
+  const getCapRate = (noi) => { const v = parseFloat(propertyValue) || 0; return v > 0 ? (noi / v) * 100 : 0; };
+  const getNetProfit = (noi) => noi - getAnnualDebtService();
+  const getCashOnCash = (noi) => { const t = getTotalDueAtClosing(); return t > 0 ? (getNetProfit(noi) / t) * 100 : 0; };
+  const getDSCR = (noi) => { const ads = getAnnualDebtService(); return ads > 0 ? noi / ads : 0; };
+  const getTotalInterest = () => getMonthlyPayment() * (parseFloat(loanTerm) || 0) * 12 - getLoanAmount();
 
   const calculateAmortization = () => {
-    const value = parseFloat(propertyValue) || 0;
-    const down = parseFloat(downPayment) || 0;
-    const rate = parseFloat(interestRate) || 0;
-    const term = parseFloat(loanTerm) || 0;
-    const principal = value - down;
-    const r = rate / 100 / 12;
-    const monthlyPayment = calculateCommercialMortgage().monthlyPayment;
+    const principal = getLoanAmount();
+    const r = (parseFloat(interestRate) || 0) / 100 / 12;
+    const n = (parseFloat(loanTerm) || 0) * 12;
+    const mp = getMonthlyPayment();
     let balance = principal;
     const schedule = [];
-
-    for (let month = 1; month <= term * 12; month++) {
-      const interestPayment = balance * r;
-      const principalPayment = monthlyPayment - interestPayment;
-      balance -= principalPayment;
-
-      schedule.push({
-        month,
-        year: Math.ceil(month / 12),
-        principal: principalPayment,
-        interest: interestPayment,
-        balance: Math.max(0, balance)
-      });
+    for (let month = 1; month <= n; month++) {
+      const interest = balance * r;
+      const princ = mp - interest;
+      balance -= princ;
+      schedule.push({ month, year: Math.ceil(month / 12), principal: princ, interest, balance: Math.max(0, balance) });
     }
-
-    const yearlySchedule = [];
-    for (let year = 1; year <= loanTerm; year++) {
-      const yearData = schedule.filter((m) => m.year === year);
-      yearlySchedule.push({
-        year,
-        principal: yearData.reduce((sum, m) => sum + m.principal, 0),
-        interest: yearData.reduce((sum, m) => sum + m.interest, 0),
-        balance: yearData[yearData.length - 1].balance
-      });
+    const term = parseFloat(loanTerm) || 0;
+    const yearly = [];
+    for (let year = 1; year <= term; year++) {
+      const yd = schedule.filter(m => m.year === year);
+      yearly.push({ year, principal: yd.reduce((s, m) => s + m.principal, 0), interest: yd.reduce((s, m) => s + m.interest, 0), balance: yd[yd.length - 1]?.balance || 0 });
     }
-
-    return { monthly: schedule, yearly: yearlySchedule };
+    return { monthly: schedule, yearly };
   };
 
-  const result = calculateCommercialMortgage();
   const amortization = calculateAmortization();
+  const currentNOI = getCurrentNOI();
+  const proFormaNOI = getProFormaNOI();
+  const fmt = (n) => `${sym}${(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  const fmtPct = (n) => `${(n || 0).toFixed(2)}%`;
+
+  const inputCls = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+  const inputClsR = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+  const inputClsP = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+
+  const NI = ({ value, onChange, onBlur, placeholder, prefix, suffix }) => (
+    <div className="relative">
+      {prefix && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{prefix}</span>}
+      {suffix && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{suffix}</span>}
+      <Input type="text" value={value} onChange={onChange} onBlur={onBlur} placeholder={placeholder}
+        className={prefix ? inputCls : suffix ? inputClsR : inputClsP} />
+    </div>
+  );
+
+  const MR = ({ label, value, highlight, isNeg }) => (
+    <div className="flex justify-between items-center py-2 border-b border-white/5">
+      <span className="text-gray-400 text-sm">{label}</span>
+      <span className={`font-semibold text-sm ${highlight ? 'text-[#C2983B]' : isNeg ? 'text-red-400' : 'text-white'}`}>{value}</span>
+    </div>
+  );
 
   return (
     <div className="bg-[#2c3e50] rounded-xl p-8 border border-white/10">
@@ -694,172 +744,189 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
         </div>
         <h3 className="text-2xl font-bold text-white">Commercial Mortgage</h3>
       </div>
-      
-      <div className="space-y-6 mb-8">
+
+      {/* Row 1 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <Label className="text-gray-300 text-sm mb-2 block">Property Value</Label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
-              {currentCurrencyObj.symbol}
-            </span>
-            <Input
-              type="text"
-              value={parseFloat(propertyValue) ? parseFloat(propertyValue).toLocaleString() : ''}
-              onChange={(e) => {
-                const val = e.target.value.replace(/,/g, '');
-                if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                  setPropertyValue(val);
-                }
-              }}
-              onBlur={(e) => {
-                const val = parseFloat(e.target.value.replace(/,/g, ''));
-                setPropertyValue(isNaN(val) ? '0' : val.toString());
-              }}
-              placeholder="1,500,000"
-              className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+          <NI prefix={sym} value={propertyValue} onChange={handleNumChange(setPropertyValue)} onBlur={handleNumBlur(setPropertyValue)} placeholder="1,500,000" />
+        </div>
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <Label className="text-gray-300 text-sm">Down Payment</Label>
+            <div className="flex gap-1 bg-white/10 rounded-lg p-0.5">
+              {[['$', 'dollar'], ['%', 'percent'], ['LTV', 'ltv']].map(([label, val]) => (
+                <button key={val} onClick={() => setDownPaymentMode(val)}
+                  className={`px-3 py-1 text-xs rounded transition-colors ${downPaymentMode === val ? 'bg-[#C2983B] text-white' : 'text-gray-400'}`}>
+                  {label === '$' ? sym : label}
+                </button>
+              ))}
+            </div>
           </div>
+          {downPaymentMode === 'dollar'
+            ? <NI prefix={sym} value={downPaymentDollar} onChange={handleNumChange(setDownPaymentDollar)} onBlur={handleNumBlur(setDownPaymentDollar)} placeholder="375,000" />
+            : <NI suffix="%" value={downPaymentPercent} onChange={handleNumChange(setDownPaymentPercent)} onBlur={handleNumBlur(setDownPaymentPercent)} placeholder={downPaymentMode === 'ltv' ? 'LTV %' : '25'} />
+          }
+          {downPaymentMode !== 'dollar' && <p className="text-gray-400 text-xs mt-1">= {fmt(getDownPayment())}</p>}
+        </div>
+      </div>
+
+      {/* Row 2 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+          <Label className="text-gray-300 text-sm mb-2 block">Interest Rate</Label>
+          <NI suffix="%" value={interestRate} onChange={handleNumChange(setInterestRate)} onBlur={handleNumBlur(setInterestRate)} placeholder="7.5" />
         </div>
         <div>
-          <Label className="text-gray-300 text-sm mb-2 block">Down Payment</Label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
-              {currentCurrencyObj.symbol}
-            </span>
-            <Input
-              type="text"
-              value={parseFloat(downPayment) ? parseFloat(downPayment).toLocaleString() : ''}
-              onChange={(e) => {
-                const val = e.target.value.replace(/,/g, '');
-                if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                  setDownPayment(val);
+          <Label className="text-gray-300 text-sm mb-2 block">Amortization (Loan Term in Years)</Label>
+          <NI value={loanTerm} onChange={handleNumChange(setLoanTerm)} onBlur={handleNumBlur(setLoanTerm)} placeholder="20" />
+        </div>
+      </div>
+
+      {/* Additional Information */}
+      <div className="border border-white/10 rounded-lg mb-6 overflow-hidden">
+        <button onClick={() => setShowAdditional(!showAdditional)}
+          className="w-full flex items-center justify-between px-5 py-4 text-white hover:bg-white/5 transition-colors">
+          <span className="font-medium text-sm">Additional Information</span>
+          <span className="text-gray-400 text-xs">{showAdditional ? 'Hide ▲' : 'Show ▼'}</span>
+        </button>
+        {showAdditional && (
+          <div className="px-5 pb-5 border-t border-white/10 pt-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label className="text-gray-300 text-sm">Closing Cost</Label>
+                  <div className="flex gap-1 bg-white/10 rounded-lg p-0.5">
+                    {[['$', 'dollar'], ['%', 'percent']].map(([label, val]) => (
+                      <button key={val} onClick={() => setClosingCostMode(val)}
+                        className={`px-3 py-1 text-xs rounded transition-colors ${closingCostMode === val ? 'bg-[#C2983B] text-white' : 'text-gray-400'}`}>
+                        {label === '$' ? sym : label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {closingCostMode === 'dollar'
+                  ? <NI prefix={sym} value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
+                  : <NI suffix="%" value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
                 }
-              }}
-              onBlur={(e) => {
-                const val = parseFloat(e.target.value.replace(/,/g, ''));
-                setDownPayment(isNaN(val) ? '0' : val.toString());
-              }}
-              placeholder="375,000"
-              className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                {closingCostMode === 'percent' && (parseFloat(closingCost) || 0) > 0 && <p className="text-gray-400 text-xs mt-1">= {fmt(getClosingCostAmount())}</p>}
+              </div>
+              <div>
+                <Label className="text-gray-300 text-sm mb-2 block">Initial Investment</Label>
+                <NI prefix={sym} value={initialInvestment} onChange={handleNumChange(setInitialInvestment)} onBlur={handleNumBlur(setInitialInvestment)} placeholder="0" />
+              </div>
+            </div>
           </div>
-        </div>
-        <div>
-          <Label className="text-gray-300 text-sm mb-2 block">Interest Rate (%)</Label>
-          <Input
-            type="text"
-            value={interestRate}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                setInterestRate(val);
-              }
-            }}
-            onBlur={(e) => {
-              const val = parseFloat(e.target.value);
-              setInterestRate(isNaN(val) ? '0' : val.toString());
-            }}
-            placeholder="7.5"
-            className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-        </div>
-        <div>
-          <Label className="text-gray-300 text-sm mb-2 block">Loan Term (Years)</Label>
-          <Input
-            type="text"
-            value={loanTerm}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                setLoanTerm(val);
-              }
-            }}
-            onBlur={(e) => {
-              const val = parseFloat(e.target.value);
-              setLoanTerm(isNaN(val) ? '0' : val.toString());
-            }}
-            placeholder="20"
-            className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-        </div>
-        <div>
-          <Label className="text-gray-300 text-sm mb-2 block">Net Annual Operating Income (NOI)</Label>
-          <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-lg">
-              {currentCurrencyObj.symbol}
-            </span>
-            <Input
-              type="text"
-              value={parseFloat(annualIncome) ? parseFloat(annualIncome).toLocaleString() : ''}
-              onChange={(e) => {
-                const val = e.target.value.replace(/,/g, '');
-                if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                  setAnnualIncome(val);
-                }
-              }}
-              onBlur={(e) => {
-                const val = parseFloat(e.target.value.replace(/,/g, ''));
-                setAnnualIncome(isNaN(val) ? '0' : val.toString());
-              }}
-              placeholder="180,000"
-              className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+        )}
+      </div>
+
+      {/* Current Numbers */}
+      <div className="border border-white/10 rounded-lg mb-6 overflow-hidden">
+        <div className="px-5 py-3 border-b border-white/10"><h4 className="text-white font-medium text-sm">Current Numbers</h4></div>
+        <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <Label className="text-gray-300 text-sm mb-2 block">Total Income</Label>
+            <NI prefix={sym} value={currentIncome} onChange={handleNumChange(setCurrentIncome)} onBlur={handleNumBlur(setCurrentIncome)} placeholder="0" />
+          </div>
+          <div>
+            <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+            <NI prefix={sym} value={currentExpenses} onChange={handleNumChange(setCurrentExpenses)} onBlur={handleNumBlur(setCurrentExpenses)} placeholder="0" />
+          </div>
+          <div>
+            <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
+            <NI prefix={sym}
+              value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() || '')}
+              onChange={(e) => { setCurrentNoiEdited(true); handleNumChange(setCurrentNoiOverride)(e); }}
+              onBlur={handleNumBlur(setCurrentNoiOverride)} placeholder="0" />
+            {currentNoiEdited && <button onClick={() => { setCurrentNoiEdited(false); setCurrentNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>}
+            {!currentNoiEdited && (parseFloat(currentIncome) || parseFloat(currentExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
           </div>
         </div>
       </div>
-      
+
+      {/* Pro Forma */}
+      <div className="border border-white/10 rounded-lg mb-8 overflow-hidden">
+        <div className="px-5 py-3 border-b border-white/10"><h4 className="text-white font-medium text-sm">Pro Forma</h4></div>
+        <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <Label className="text-gray-300 text-sm mb-2 block">Total Income</Label>
+            <NI prefix={sym} value={proFormaIncome} onChange={handleNumChange(setProFormaIncome)} onBlur={handleNumBlur(setProFormaIncome)} placeholder="0" />
+          </div>
+          <div>
+            <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+            <NI prefix={sym} value={proFormaExpenses} onChange={handleNumChange(setProFormaExpenses)} onBlur={handleNumBlur(setProFormaExpenses)} placeholder="0" />
+          </div>
+          <div>
+            <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
+            <NI prefix={sym}
+              value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() || '')}
+              onChange={(e) => { setProFormaNoiEdited(true); handleNumChange(setProFormaNoiOverride)(e); }}
+              onBlur={handleNumBlur(setProFormaNoiOverride)} placeholder="0" />
+            {proFormaNoiEdited && <button onClick={() => { setProFormaNoiEdited(false); setProFormaNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>}
+            {!proFormaNoiEdited && (parseFloat(proFormaIncome) || parseFloat(proFormaExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
+          </div>
+        </div>
+      </div>
+
+      {/* Results */}
       <div className="pt-6 border-t border-white/10">
-        <p className="text-gray-400 text-sm mb-2">Monthly Payment:</p>
-        <p className="text-5xl font-bold text-[#C2983B] mb-6">
-          {formatCurrency(result.monthlyPayment)}
-        </p>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <p className="text-gray-400 text-xs mb-1">Loan Amount</p>
-            <p className="text-lg font-medium text-white">
-              {formatCurrency(result.principal)}
-            </p>
+        <p className="text-gray-400 text-sm mb-1">Monthly Payment (P&I):</p>
+        <p className="text-5xl font-bold text-[#C2983B] mb-6">{fmt(getMonthlyPayment())}</p>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          {[['Loan Amount', fmt(getLoanAmount())], ['LTV Ratio', fmtPct(getLoanAmount() / (parseFloat(propertyValue) || 1) * 100)], ['Annual Debt Service', fmt(getAnnualDebtService())], ['Total Interest', fmt(getTotalInterest())]].map(([label, val]) => (
+            <div key={label} className="bg-white/5 rounded-lg p-3">
+              <p className="text-gray-400 text-xs mb-1">{label}</p>
+              <p className={`text-base font-semibold ${label === 'Total Interest' ? 'text-red-400' : 'text-white'}`}>{val}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Investment + Current + Pro Forma */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-white/5 rounded-lg p-4">
+            <h4 className="text-[#C2983B] font-semibold text-sm mb-3">Investment</h4>
+            <div className="mb-3">
+              <p className="text-gray-400 text-xs mb-1">Total Due at Closing</p>
+              <p className="text-xl font-bold text-white">{fmt(getTotalDueAtClosing())}</p>
+            </div>
+            <MR label="Down Payment" value={fmt(getDownPayment())} />
+            <MR label="Closing Cost" value={fmt(getClosingCostAmount())} />
+            <MR label="Initial Investment" value={fmt(parseFloat(initialInvestment) || 0)} />
           </div>
-          <div>
-            <p className="text-gray-400 text-xs mb-1">LTV Ratio</p>
-            <p className="text-lg font-medium text-white">
-              {result.ltv.toFixed(1)}%
-            </p>
+          <div className="bg-white/5 rounded-lg p-4">
+            <h4 className="text-[#C2983B] font-semibold text-sm mb-3">Current</h4>
+            <MR label="NOI" value={fmt(currentNOI)} />
+            <MR label="Cap Rate" value={fmtPct(getCapRate(currentNOI))} highlight />
+            <MR label="Net Profit" value={fmt(getNetProfit(currentNOI))} isNeg={getNetProfit(currentNOI) < 0} />
+            <MR label="Cash on Cash" value={fmtPct(getCashOnCash(currentNOI))} highlight={getCashOnCash(currentNOI) > 0} isNeg={getCashOnCash(currentNOI) < 0} />
+            <MR label="DSCR" value={`${getDSCR(currentNOI).toFixed(2)}x`} highlight={getDSCR(currentNOI) >= 1.25} isNeg={getDSCR(currentNOI) < 1} />
           </div>
-          <div>
-            <p className="text-gray-400 text-xs mb-1">DSCR</p>
-            <p className={`text-lg font-medium ${result.dscr >= 1.25 ? 'text-green-400' : 'text-yellow-400'}`}>
-              {result.dscr.toFixed(2)}x
-            </p>
-          </div>
-          <div>
-            <p className="text-gray-400 text-xs mb-1">Total Interest</p>
-            <p className="text-lg font-medium text-red-400">
-              {formatCurrency(result.totalInterest)}
-            </p>
+          <div className="bg-white/5 rounded-lg p-4">
+            <h4 className="text-[#C2983B] font-semibold text-sm mb-3">Pro Forma</h4>
+            <MR label="NOI" value={fmt(proFormaNOI)} />
+            <MR label="Cap Rate" value={fmtPct(getCapRate(proFormaNOI))} highlight />
+            <MR label="Net Profit" value={fmt(getNetProfit(proFormaNOI))} isNeg={getNetProfit(proFormaNOI) < 0} />
+            <MR label="Cash on Cash" value={fmtPct(getCashOnCash(proFormaNOI))} highlight={getCashOnCash(proFormaNOI) > 0} isNeg={getCashOnCash(proFormaNOI) < 0} />
+            <MR label="DSCR" value={`${getDSCR(proFormaNOI).toFixed(2)}x`} highlight={getDSCR(proFormaNOI) >= 1.25} isNeg={getDSCR(proFormaNOI) < 1} />
           </div>
         </div>
 
-        <button
-          onClick={() => setShowAmortization(!showAmortization)}
-          className="w-full bg-[#1a2b4b]/70 hover:bg-[#1a2b4b] text-white py-3 rounded-lg transition-colors mt-6">
+        <button onClick={() => setShowAmortization(!showAmortization)}
+          className="w-full bg-[#1a2b4b]/70 hover:bg-[#1a2b4b] text-white py-3 rounded-lg transition-colors">
           {showAmortization ? 'Hide' : 'Show'} Amortization Schedule
         </button>
 
-        {showAmortization &&
-        <div className="mt-6 border-t border-white/10 pt-6">
+        {showAmortization && (
+          <div className="mt-6 border-t border-white/10 pt-6">
             <div className="flex gap-2 mb-4">
-              <button
-              onClick={() => setViewMode('yearly')}
-              className={`flex-1 py-2 rounded-lg transition-colors ${
-              viewMode === 'yearly' ? 'bg-[#C2983B] text-white' : 'bg-[#1a2b4b]/50 text-gray-400'}`
-              }>
-                Yearly
-              </button>
-              <button
-              onClick={() => setViewMode('monthly')}
-              className={`flex-1 py-2 rounded-lg transition-colors ${
-              viewMode === 'monthly' ? 'bg-[#C2983B] text-white' : 'bg-[#1a2b4b]/50 text-gray-400'}`
-              }>
-                Monthly
-              </button>
+              {['yearly', 'monthly'].map(mode => (
+                <button key={mode} onClick={() => setViewMode(mode)}
+                  className={`flex-1 py-2 rounded-lg transition-colors capitalize ${viewMode === mode ? 'bg-[#C2983B] text-white' : 'bg-[#1a2b4b]/50 text-gray-400'}`}>
+                  {mode}
+                </button>
+              ))}
             </div>
-
             <div className="max-h-96 overflow-y-auto">
               <table className="w-full text-sm">
                 <thead className="sticky top-0 bg-[#2c3e50]">
@@ -871,22 +938,22 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {(viewMode === 'yearly' ? amortization.yearly : amortization.monthly).map((row, idx) =>
-                <tr key={idx} className="border-b border-white/5 text-gray-300">
+                  {(viewMode === 'yearly' ? amortization.yearly : amortization.monthly).map((row, idx) => (
+                    <tr key={idx} className="border-b border-white/5 text-gray-300">
                       <td className="py-2">{viewMode === 'yearly' ? row.year : row.month}</td>
-                      <td className="text-right">{formatCurrency(row.interest)}</td>
-                      <td className="text-right">{formatCurrency(row.principal)}</td>
-                      <td className="text-right">{formatCurrency(row.balance)}</td>
+                      <td className="text-right">{fmt(row.interest)}</td>
+                      <td className="text-right">{fmt(row.principal)}</td>
+                      <td className="text-right">{fmt(row.balance)}</td>
                     </tr>
-                )}
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
-        }
+        )}
       </div>
-    </div>);
-
+    </div>
+  );
 }
 
 function LoanCalculator({ formatCurrency, currency }) {
