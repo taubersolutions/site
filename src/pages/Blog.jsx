@@ -9,27 +9,49 @@ import SEO from '@/components/seo/SEO';
 const posts = [
   {
     id: 1,
-    title: "Credit Cards: The Financial Devil in Disguise",
-    excerpt: "Credit cards feel convenient, but they may be silently draining your finances. Here is the honest truth about how they work and why they cost you more than you think.",
+    title: "Just 18 Hours a Year",
+    excerpt: "No time to budget? Here is the surprising truth: managing your finances properly takes no more than 18 hours a year. That is all.",
     category: "Budgeting",
-    date: "Parshas Yisro 2025",
-    readTime: "5 min read",
-    image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80",
+    date: "Parshas Vaeschanan 2025",
+    readTime: "4 min read",
+    image: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&q=80",
     content: [
-      "Less than 75 years ago, the concept of buying something without paying cash on the spot barely existed. The credit card was born in 1950 when a wealthy businessman walked into a restaurant and realized he had left his wallet at home. Embarrassed, he set out to create a solution and founded the Diners Club Card, accepted only at restaurants. Eight years later, American Express and Visa launched cards accepted everywhere. The rest is history.",
-      "HEADING:Every Swipe Is a Loan",
-      "When you swipe a credit card, you are not spending your own money. You are taking out a loan. Even if you have the money sitting in your bank account, you still have a debt until you pay it off. Your brain does not process it the same way. When you pay cash, you feel the loss immediately. When you swipe a card, your brain registers the money still sitting in your account and you end up spending more.",
-      "HEADING:The Interest Rate Trap",
-      "A few years ago, the average credit card interest rate was around 16%. Today, many cards charge close to 30%. That means for every $1,000 you carry as a balance, you pay $300 per year in interest alone. After two years, you have paid $600 in penalties on that single thousand dollars.",
-      "HEADING:You Spend More Even Without Paying Interest",
-      "Even people who pay their full balance every month are not in the clear. Studies show that the average American spends 7 to 12% more when using a credit card versus cash. In the Orthodox Jewish community, that number is often 30% or more because our expenses are larger: children, Shabbos, Yom Tov, camp, simchos, and more. Some clients, after doing an honest accounting, discovered they were spending double what they would have spent with cash.",
-      "HEADING:How It Escalates",
-      "It starts innocently. You use the card to build credit, or to earn points. You tell yourself you will pay it off daily. Then weekly. Then monthly. Meanwhile, your family grows, expenses increase, and one month you find yourself spending next week's paycheck before it arrives. The credit card statement arrives and you have overspent again.",
-      "The bottom line: credit cards are a financial trap dressed up as a convenience. Use them with extreme caution, or better yet, switch to a debit card for everyday purchases."
+      "We constantly hear the same excuse: I know I need to budget. I know I am hurting myself by not tracking my income and expenses. But what can I do? I simply do not have the time. I am running from morning to night with my family, work, davening, simchos, and everything else. Do you really expect me to sit down every month for hours going over my finances?",
+      "Here is a surprise: budgeting properly takes a maximum of 18 hours per year. Yes, you read that correctly. 18 hours per year is all it takes.",
+      "HEADING:How the Math Works",
+      "Getting started the first time does take a few hours. You need to sit down, clarify your budget, get familiar with your own numbers, go through all your assets, income, and expenses, and understand the real picture of your finances. This initial setup typically takes between 2 and 5 hours. Think of it like any preparation before a big project.",
+      "After that initial setup, maintaining your budget takes only about 1.5 hours per month. That breaks down into 10 to 15 minutes per week to review the past week's income and expenses, plus 20 to 25 minutes at the end of each month to summarize the month and plan for the next one.",
+      "HEADING:The Simple Calculation",
+      "1.5 hours per month, multiplied by 12 months, equals 18 hours per year. That is the grand total.",
+      "Who cannot afford 18 hours a year to achieve financial peace of mind and freedom? Those 18 hours, spread out over the year in short 15-minute sessions, are something every single person can and should invest in.",
+      "Once you have your finances organized, you will wonder how you ever lived without it. The clarity, the calm, the sense of control over your money is worth far more than 18 hours."
     ]
   },
   {
     id: 2,
+    title: "Your Highest-Paid Hours",
+    excerpt: "What if the 18 hours you spend budgeting per year are actually the most financially productive hours you ever work? Here is the math that proves it.",
+    category: "Budgeting",
+    date: "Parshas Eikev 2025",
+    readTime: "4 min read",
+    image: "https://images.unsplash.com/photo-1565514158740-064f34bd6cfd?w=800&q=80",
+    content: [
+      "Last week we established that budgeting takes no more than 18 hours per year. Now let us look at what those 18 hours are actually worth.",
+      "HEADING:The Value of Your Time",
+      "Consider a young man who works 40 hours a week and brings home $1,500 per week. His hourly rate is $37.50. At that rate, 18 hours of his time is worth $675.",
+      "Someone bringing home $3,000 per week earns $75 per hour. Their 18 hours is worth $1,350.",
+      "And for a business owner earning $600,000 per year, working 30 hours a week for 50 weeks, the hourly rate is $400. Their 18 hours is worth $7,200.",
+      "HEADING:The Return on Those Hours",
+      "Here is the key insight: when someone actually sits down and budgets those 18 hours per year, they consistently earn back far more than what those hours are officially worth.",
+      "The worker whose 18 hours is worth $675 has discovered, after budgeting, savings and corrections worth thousands of dollars. The same is true for the person whose 18 hours is worth $1,350. And for the business owner earning $600,000 per year, the discoveries made during those 18 hours of budgeting consistently reveal far more than the $7,200 those hours are officially worth.",
+      "HEADING:Why This Happens",
+      "When you actually sit down and look clearly at all your income and expenses, you see exactly where your money is going, who is charging you, and how much. You discover subscriptions you forgot about, costs that are higher than you realized, and opportunities to redirect spending.",
+      "In every single case I have encountered, the 18 hours invested in budgeting have returned many times their official value.",
+      "The 18 hours you give to your budget each year are the hours on which you earn the most. By far."
+    ]
+  },
+  {
+    id: 3,
     title: "How Does Everyone Else Afford It? (Part 1)",
     excerpt: "You see your neighbors filling their carts, driving nice cars, and taking vacations. Meanwhile you are struggling. Are they really making it or is something else going on?",
     category: "Mindset",
@@ -49,7 +71,7 @@ const posts = [
     ]
   },
   {
-    id: 3,
+    id: 4,
     title: "How Does Everyone Else Afford It? (Part 2)",
     excerpt: "Even if your neighbor truly can afford their lifestyle, what does that have to do with you? The only budget that matters is your own.",
     category: "Mindset",
@@ -62,10 +84,89 @@ const posts = [
       "Knowing how someone else manages their money does not pay your bills. Understanding why your neighbor can afford a nicer car does not improve your budget. Obsessing over someone else's finances is a distraction that keeps you from focusing on your own. Worse than being useless, comparison is actively destructive. It creates internal resentment. It causes husbands to blame wives and wives to blame husbands. It shifts your focus away from the one thing that actually matters: your own numbers.",
       "HEADING:The Question to Ask Instead",
       "Instead of asking how does he afford it, ask yourself: How can I improve my own financial situation? Look at your own budget. Which expenses can you cut? Where can you increase your income? What financial goals do you want to set?",
-      "Here is something to consider: when you see someone else's spending and wonder how they afford it, do you think they are not looking at you and asking the same question? Your neighbor sees your spending too. He does not know you are struggling. He does not see how much or how little you have left at the end of the month.",
+      "Here is something to consider: when you see someone else spending and wonder how they afford it, do you think they are not looking at you and asking the same question? Your neighbor sees your spending too. He does not know you are struggling.",
       "HEADING:The Bottom Line",
       "The question of how does he make it is pointless. First, you do not actually know if he is making it. Second, even if he is, it does not help you. The path to financial health runs through your own budget, not your neighbor's.",
       "Sit down with your spouse. Go through your numbers honestly. Write down your financial goals. Make a plan to achieve them. With Hashem's help, you can get there and find true financial peace of mind."
+    ]
+  },
+  {
+    id: 5,
+    title: "Credit Cards: The Financial Devil in Disguise",
+    excerpt: "Credit cards feel convenient, but they may be silently draining your finances. Here is the honest truth about how they work and why they cost you more than you think.",
+    category: "Budgeting",
+    date: "Parshas Yisro 2025",
+    readTime: "5 min read",
+    image: "https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=800&q=80",
+    content: [
+      "Less than 75 years ago, the concept of buying something without paying cash on the spot barely existed. The credit card was born in 1950 when a wealthy businessman walked into a restaurant and realized he had left his wallet at home. Embarrassed, he founded the Diners Club Card, accepted only at restaurants. Eight years later, American Express and Visa launched cards accepted everywhere.",
+      "HEADING:Every Swipe Is a Loan",
+      "When you swipe a credit card, you are not spending your own money. You are taking out a loan. Even if you have the money sitting in your bank account, you still have a debt until you pay it off. Your brain does not process it the same way. When you pay cash, you feel the loss immediately. When you swipe a card, your brain registers the money still in your account and you end up spending more.",
+      "HEADING:The Interest Rate Trap",
+      "A few years ago, the average credit card interest rate was around 16%. Today, many cards charge close to 30%. That means for every $1,000 you carry as a balance, you pay $300 per year in interest alone.",
+      "HEADING:You Spend More Even Without Paying Interest",
+      "Even people who pay their full balance every month are not in the clear. Studies show that the average American spends 7 to 12% more when using a credit card versus cash. In the Orthodox Jewish community, that number is often 30% or more because our expenses are larger: children, Shabbos, Yom Tov, camp, simchos, and more. Some clients discovered they were spending double what they would have spent with cash.",
+      "The bottom line: credit cards are a financial trap dressed up as a convenience. Use them with extreme caution, or better yet, switch to a debit card for everyday purchases."
+    ]
+  },
+  {
+    id: 6,
+    title: "Credit Cards: The Points Illusion (Part 2)",
+    excerpt: "Think you are winning with credit card points and cashback? The math tells a very different story. Here is what the credit card companies do not want you to know.",
+    category: "Budgeting",
+    date: "Parshas Mishpatim 2025",
+    readTime: "5 min read",
+    image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=800&q=80",
+    content: [
+      "One of the most seductive illusions of credit cards is the points and miles you earn. People tell themselves: I spend the money anyway, so I might as well use the credit card and earn points. We hear this almost daily from clients. But when you look at it honestly, points are simply a tool credit card companies use to convince you the card is actually benefiting you, when in reality it almost always costs you more than you gain.",
+      "HEADING:A Real-Life Example",
+      "A client once told me proudly at the end of the year that he had earned $4,500 worth of points. I asked to see his most recent credit card statement. In that one statement alone, there was an interest charge of around $600. If a single statement showed $600 in interest, the full year's interest charges likely exceeded his points earnings entirely.",
+      "HEADING:The Question Nobody Asks",
+      "Why would a credit card company give you cashback and rewards for borrowing their money? And why do they give extra rewards for specific categories like restaurants, gas, and travel? Are they really that generous? No. They know with certainty that most people will eventually carry a balance and pay interest, which more than covers any rewards they give out.",
+      "HEADING:How It Escalates",
+      "99% of our clients who came to us with serious credit card debt started using credit cards for two reasons: to build credit, and to earn points. Almost every single one ended up with massive debt.",
+      "When you buy something with a credit card, you effectively pay for it three times: once when you buy it, once when the statement arrives, and once when you actually pay it off. And far too often, people pay four, five, six, or seven times over, making minimum payments for years.",
+      "The credit card is a financial snake. As Rashi explains about the word neshech (interest): like a snake that gives a small bite which is not felt immediately, but the poison slowly spreads through the body until it reaches the head. That is exactly what happens with credit card debt."
+    ]
+  },
+  {
+    id: 7,
+    title: "The Debit Card: Your Financial Best Friend",
+    excerpt: "If not a credit card, then what? The debit card works exactly like a credit card for everyday purchases, but with one crucial difference that protects your finances.",
+    category: "Budgeting",
+    date: "Parshas Terumah 2025",
+    readTime: "5 min read",
+    image: "https://images.unsplash.com/photo-1601597111158-2fceff292cdc?w=800&q=80",
+    content: [
+      "After discussing the dangers of credit cards, the natural question is: what should I use instead? We live in a world where cash is increasingly rare and many purchases can only be made with a card. The answer is simple: the debit card.",
+      "HEADING:How It Works",
+      "A debit card looks identical to a credit card. It has 16 digits, an expiration date, and a 3-digit security code. You can swipe it, insert the chip, tap with contactless technology, or enter the numbers online. Everything works exactly like a credit card.",
+      "There is one critical difference: when you swipe a debit card, the money comes out of your bank account immediately. You can only spend money you actually have. If there is not enough in your account, the card will not work.",
+      "HEADING:Why This Matters",
+      "That built-in limitation is actually your greatest financial protection. The bank alerts you every time you are running low. This forces you to make real decisions: do I cut spending, or do I need to find another source of income? You never pay late fees. You never pay interest. Once you buy something, it is paid for. The charge does not follow you to next month.",
+      "HEADING:An Important Tip: Do Not Enter Your PIN",
+      "When using a debit card in stores, avoid entering your PIN. There are three reasons. First, charges processed without a PIN go through the credit card network, making disputes much easier if something goes wrong. Second, if a skimmer device captures your card info, criminals cannot access your account without the PIN. Third, if you accidentally leave your card somewhere and someone saw you enter the PIN, they could drain your account at an ATM.",
+      "You can always bypass the PIN. At most stores, simply press Enter or choose the credit option, and the payment goes through.",
+      "The debit card lets you live a completely normal financial life in today's cashless world, while keeping you protected from the trap of debt."
+    ]
+  },
+  {
+    id: 8,
+    title: "The Clothing Bank Account",
+    excerpt: "Yom Tov expenses feel overwhelming partly because clothing costs hit all at once. Here is a simple system that spreads out the burden and brings real peace of mind.",
+    category: "Budgeting",
+    date: "Parshas Lech Lecha 2025",
+    readTime: "4 min read",
+    image: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800&q=80",
+    content: [
+      "Every child in cheder knows that Yom Tov is expensive. But a moment's reflection reveals that Yom Tov expenses really fall into two separate categories. The first is the general holiday costs: shul seats, Yom Kippur kapparos, the sukkah, dalet minim, matzos, wine, Yom Tov meals, and so on. The second category is outfitting the entire family with new clothing and shoes for Yom Tov.",
+      "To make things more complicated, the two major Yomim Tovim, Pesach and Sukkos, both fall at the transition between winter and summer seasons. This means that Erev Yom Tov season is also the time when families need to buy an entirely new wardrobe, adding thousands of dollars to expenses that are already very high.",
+      "HEADING:The Solution",
+      "The answer is to open a dedicated bank account for clothing, and deposit a set amount every single month.",
+      "Here is how to set it up. First, calculate how much clothing for your family costs per season, or add up both seasons and divide by two. You do not need a precise number, a reasonable estimate works fine. Second, divide that number by six. Over the next six months, deposit one-sixth of the total each month into a designated account. Third, add this monthly amount into your budget like any other regular expense. Fourth, open an account at Capital One which charges no monthly fees, or use a dedicated envelope if you prefer cash.",
+      "HEADING:What This Accomplishes",
+      "Hundreds of Tauber Solutions clients have set up this system, and the results are remarkable. The wife can go shopping for the children's clothing without stress, knowing the money is there. The husband does not feel blindsided by a sudden large expense before Yom Tov. And there is an added bonus: with money set aside specifically for clothing, families can shop after the season when prices drop 40 to 80%, buying next year's clothing at a fraction of the cost.",
+      "A clothing account does not just buy clothing. It buys shalom bayis."
     ]
   }
 ];
@@ -100,12 +201,12 @@ function PostModal({ post, onClose }) {
               <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{post.readTime}</span>
             )}
           </div>
-          <div className="prose prose-sm max-w-none text-gray-600 space-y-4">
+          <div className="space-y-4 text-gray-600">
             {post.content.map((para, i) => {
               if (para.startsWith('HEADING:')) {
                 return <h3 key={i} className="text-lg font-semibold text-[#1a2b4b] mt-6 mb-2">{para.replace('HEADING:', '')}</h3>;
               }
-              return <p key={i} className="leading-relaxed">{para}</p>;
+              return <p key={i} className="leading-relaxed text-sm">{para}</p>;
             })}
           </div>
           <div className="mt-8 pt-6 border-t border-gray-100">
