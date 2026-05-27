@@ -615,35 +615,12 @@ function MortgageCalculator({ formatCurrency, currency }) {
 
 }
 
-const parseNumTools = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
-
-const inputClsBase = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
-const inputClsBaseR = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
-const inputClsBaseP = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
-
-function NI({ value, onChange, onBlur, placeholder, prefix, suffix }) {
-  return (
-    <div className="relative">
-      {prefix && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{prefix}</span>}
-      {suffix && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{suffix}</span>}
-      <Input type="text" value={value} onChange={onChange} onBlur={onBlur} placeholder={placeholder}
-        className={prefix ? inputClsBase : suffix ? inputClsBaseR : inputClsBaseP} />
-    </div>
-  );
-}
-
-function MR({ label, value, highlight, isNeg }) {
-  return (
-    <div className="flex justify-between items-center py-2 border-b border-white/5">
-      <span className="text-gray-400 text-sm">{label}</span>
-      <span className={`font-semibold text-sm ${highlight ? 'text-green-400' : isNeg ? 'text-red-400' : 'text-white'}`}>{value}</span>
-    </div>
-  );
-}
-
 function CommercialMortgageCalculator({ formatCurrency, currency }) {
   const currentCurrencyObj = currencies.find((c) => c.code === currency);
   const sym = currentCurrencyObj.symbol;
+  const pn = (val) => parseFloat(String(val).replace(/,/g, '')) || 0;
+  const fmt = (n) => `${sym}${(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  const fmtPct = (n) => `${(n || 0).toFixed(2)}%`;
 
   const [propertyValue, setPropertyValue] = useState('1,500,000');
   const [downPaymentMode, setDownPaymentMode] = useState('dollar');
@@ -651,73 +628,65 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
   const [downPaymentPercent, setDownPaymentPercent] = useState('25');
   const [interestRate, setInterestRate] = useState('7.5');
   const [loanTerm, setLoanTerm] = useState('20');
-
   const [showAdditional, setShowAdditional] = useState(false);
   const [closingCost, setClosingCost] = useState('');
   const [closingCostMode, setClosingCostMode] = useState('dollar');
   const [initialInvestment, setInitialInvestment] = useState('');
-
   const [currentIncome, setCurrentIncome] = useState('');
   const [currentExpenses, setCurrentExpenses] = useState('');
   const [currentNoiOverride, setCurrentNoiOverride] = useState('');
   const [currentNoiEdited, setCurrentNoiEdited] = useState(false);
-
   const [proFormaIncome, setProFormaIncome] = useState('');
   const [proFormaExpenses, setProFormaExpenses] = useState('');
   const [proFormaNoiOverride, setProFormaNoiOverride] = useState('');
   const [proFormaNoiEdited, setProFormaNoiEdited] = useState(false);
-
   const [showAmortization, setShowAmortization] = useState(false);
   const [viewMode, setViewMode] = useState('yearly');
 
   const handleNumChange = (setter) => (e) => {
-    const val = e.target.value.replace(/,/g, '');
-    if (val === '' || /^\d*\.?\d*$/.test(val)) setter(val);
+    const raw = e.target.value.replace(/,/g, '');
+    if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+      if (raw === '' || raw === '.') { setter(raw); return; }
+      const num = parseFloat(raw);
+      if (!isNaN(num)) setter(Number.isInteger(num) ? num.toLocaleString('en-US') : raw);
+    }
   };
   const handleNumBlur = (setter) => (e) => {
     const val = parseFloat(e.target.value.replace(/,/g, ''));
-    setter(isNaN(val) ? '' : val);
+    setter(isNaN(val) ? '' : val.toLocaleString('en-US'));
   };
 
   const getDownPayment = () => {
-    const price = parseFloat(propertyValue) || 0;
-    if (downPaymentMode === 'percent') return price * ((parseFloat(downPaymentPercent) || 0) / 100);
-    if (downPaymentMode === 'ltv') return price * ((100 - (parseFloat(downPaymentPercent) || 0)) / 100);
-    return parseFloat(downPaymentDollar) || 0;
+    const price = pn(propertyValue);
+    if (downPaymentMode === 'percent') return price * pn(downPaymentPercent) / 100;
+    if (downPaymentMode === 'ltv') return price * (100 - pn(downPaymentPercent)) / 100;
+    return pn(downPaymentDollar);
   };
   const getClosingCostAmount = () => {
-    const value = parseFloat(propertyValue) || 0;
-    const cc = parseFloat(closingCost) || 0;
-    return closingCostMode === 'percent' ? (value * cc) / 100 : cc;
+    const cc = pn(closingCost);
+    return closingCostMode === 'percent' ? pn(propertyValue) * cc / 100 : cc;
   };
-  const getTotalDueAtClosing = () => getDownPayment() + getClosingCostAmount() + (parseFloat(initialInvestment) || 0);
-  const getLoanAmount = () => (parseFloat(propertyValue) || 0) - getDownPayment();
+  const getTotalDueAtClosing = () => getDownPayment() + getClosingCostAmount() + pn(initialInvestment);
+  const getLoanAmount = () => pn(propertyValue) - getDownPayment();
   const getMonthlyPayment = () => {
     const principal = getLoanAmount();
-    const r = (parseFloat(interestRate) || 0) / 100 / 12;
-    const n = (parseFloat(loanTerm) || 0) * 12;
-    if (r === 0 || n === 0) return 0;
+    const r = pn(interestRate) / 100 / 12;
+    const n = pn(loanTerm) * 12;
+    if (!r || !n) return 0;
     return principal * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
   };
   const getAnnualDebtService = () => getMonthlyPayment() * 12;
-  const getCurrentNOI = () => {
-    if (currentNoiEdited) return parseFloat(currentNoiOverride) || 0;
-    return (parseFloat(currentIncome) || 0) - (parseFloat(currentExpenses) || 0);
-  };
-  const getProFormaNOI = () => {
-    if (proFormaNoiEdited) return parseFloat(proFormaNoiOverride) || 0;
-    return (parseFloat(proFormaIncome) || 0) - (parseFloat(proFormaExpenses) || 0);
-  };
-  const getCapRate = (noi) => { const v = parseFloat(propertyValue) || 0; return v > 0 ? (noi / v) * 100 : 0; };
+  const getCurrentNOI = () => currentNoiEdited ? pn(currentNoiOverride) : pn(currentIncome) - pn(currentExpenses);
+  const getProFormaNOI = () => proFormaNoiEdited ? pn(proFormaNoiOverride) : pn(proFormaIncome) - pn(proFormaExpenses);
+  const getCapRate = (noi) => { const v = pn(propertyValue); return v > 0 ? (noi / v) * 100 : 0; };
   const getNetProfit = (noi) => noi - getAnnualDebtService();
   const getCashOnCash = (noi) => { const t = getTotalDueAtClosing(); return t > 0 ? (getNetProfit(noi) / t) * 100 : 0; };
   const getDSCR = (noi) => { const ads = getAnnualDebtService(); return ads > 0 ? noi / ads : 0; };
-  const getTotalInterest = () => getMonthlyPayment() * (parseFloat(loanTerm) || 0) * 12 - getLoanAmount();
 
   const calculateAmortization = () => {
     const principal = getLoanAmount();
-    const r = (parseFloat(interestRate) || 0) / 100 / 12;
-    const n = (parseFloat(loanTerm) || 0) * 12;
+    const r = pn(interestRate) / 100 / 12;
+    const n = pn(loanTerm) * 12;
     const mp = getMonthlyPayment();
     let balance = principal;
     const schedule = [];
@@ -727,9 +696,8 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
       balance -= princ;
       schedule.push({ month, year: Math.ceil(month / 12), principal: princ, interest, balance: Math.max(0, balance) });
     }
-    const term = parseFloat(loanTerm) || 0;
     const yearly = [];
-    for (let year = 1; year <= term; year++) {
+    for (let year = 1; year <= pn(loanTerm); year++) {
       const yd = schedule.filter(m => m.year === year);
       yearly.push({ year, principal: yd.reduce((s, m) => s + m.principal, 0), interest: yd.reduce((s, m) => s + m.interest, 0), balance: yd[yd.length - 1]?.balance || 0 });
     }
@@ -739,14 +707,37 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
   const amortization = calculateAmortization();
   const currentNOI = getCurrentNOI();
   const proFormaNOI = getProFormaNOI();
-  const fmt = (n) => `${sym}${(n || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-  const fmtPct = (n) => `${(n || 0).toFixed(2)}%`;
 
-  
-  
-  
+  const inputCls = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+  const inputClsR = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+  const inputClsP = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
+  const NI = ({ value, onChange, onBlur, placeholder, prefix, suffix }) => (
+    <div className="relative">
+      {prefix && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{prefix}</span>}
+      {suffix && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{suffix}</span>}
+      <Input type="text" value={value} onChange={onChange} onBlur={onBlur} placeholder={placeholder}
+        className={prefix ? inputCls : suffix ? inputClsR : inputClsP} />
+    </div>
+  );
 
+  const Toggle = ({ options, value, onChange }) => (
+    <div className="flex gap-1 bg-white/10 rounded-lg p-0.5 shrink-0">
+      {options.map(([label, val]) => (
+        <button key={val} onClick={() => onChange(val)}
+          className={`px-3 py-1 text-xs rounded transition-colors ${value === val ? 'bg-[#C2983B] text-white' : 'text-gray-400'}`}>
+          {label === '$' ? sym : label}
+        </button>
+      ))}
+    </div>
+  );
+
+  const MR = ({ label, value, highlight, isNeg }) => (
+    <div className="flex justify-between items-center py-2 border-b border-white/5">
+      <span className="text-gray-400 text-sm">{label}</span>
+      <span className={`font-semibold text-sm ${highlight ? 'text-green-400' : isNeg ? 'text-red-400' : 'text-white'}`}>{value}</span>
+    </div>
+  );
 
   return (
     <div className="bg-[#2c3e50] rounded-xl p-8 border border-white/10">
@@ -764,21 +755,16 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
           <NI prefix={sym} value={propertyValue} onChange={handleNumChange(setPropertyValue)} onBlur={handleNumBlur(setPropertyValue)} placeholder="1,500,000" />
         </div>
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <Label className="text-gray-300 text-sm">Down Payment</Label>
-            <div className="flex gap-1 bg-white/10 rounded-lg p-0.5">
-              {[['$', 'dollar'], ['%', 'percent'], ['LTV', 'ltv']].map(([label, val]) => (
-                <button key={val} onClick={() => setDownPaymentMode(val)}
-                  className={`px-3 py-1 text-xs rounded transition-colors ${downPaymentMode === val ? 'bg-[#C2983B] text-white' : 'text-gray-400'}`}>
-                  {label === '$' ? sym : label}
-                </button>
-              ))}
+          <Label className="text-gray-300 text-sm mb-2 block">Down Payment</Label>
+          <div className="flex gap-2 items-center">
+            <div className="flex-1">
+              {downPaymentMode === 'dollar'
+                ? <NI prefix={sym} value={downPaymentDollar} onChange={handleNumChange(setDownPaymentDollar)} onBlur={handleNumBlur(setDownPaymentDollar)} placeholder="375,000" />
+                : <NI suffix="%" value={downPaymentPercent} onChange={handleNumChange(setDownPaymentPercent)} onBlur={handleNumBlur(setDownPaymentPercent)} placeholder={downPaymentMode === 'ltv' ? 'LTV %' : '25'} />
+              }
             </div>
+            <Toggle options={[['$','dollar'],['%','percent'],['LTV','ltv']]} value={downPaymentMode} onChange={setDownPaymentMode} />
           </div>
-          {downPaymentMode === 'dollar'
-            ? <NI prefix={sym} value={downPaymentDollar} onChange={handleNumChange(setDownPaymentDollar)} onBlur={handleNumBlur(setDownPaymentDollar)} placeholder="375,000" />
-            : <NI suffix="%" value={downPaymentPercent} onChange={handleNumChange(setDownPaymentPercent)} onBlur={handleNumBlur(setDownPaymentPercent)} placeholder={downPaymentMode === 'ltv' ? 'LTV %' : '25'} />
-          }
           {downPaymentMode !== 'dollar' && <p className="text-gray-400 text-xs mt-1">= {fmt(getDownPayment())}</p>}
         </div>
       </div>
@@ -796,102 +782,108 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
       </div>
 
       {/* Additional Information */}
-      <div className="border border-white/10 rounded-lg mb-6 overflow-hidden">
+      <div className="border border-white/10 rounded-lg mb-8 overflow-hidden">
         <button onClick={() => setShowAdditional(!showAdditional)}
           className="w-full flex items-center justify-between px-5 py-4 text-white hover:bg-white/5 transition-colors">
           <span className="font-medium text-sm">Additional Information</span>
-          <span className="text-gray-400 text-xs">{showAdditional ? 'Hide ▲' : 'Show ▼'}</span>
+          <span className="text-gray-400 text-xs">{showAdditional ? '▲' : '▼'}</span>
         </button>
         {showAdditional && (
-          <div className="px-5 pb-5 border-t border-white/10 pt-5">
+          <div className="px-5 pb-5 border-t border-white/10 pt-5 space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label className="text-gray-300 text-sm">Closing Cost</Label>
-                  <div className="flex gap-1 bg-white/10 rounded-lg p-0.5">
-                    {[['$', 'dollar'], ['%', 'percent']].map(([label, val]) => (
-                      <button key={val} onClick={() => setClosingCostMode(val)}
-                        className={`px-3 py-1 text-xs rounded transition-colors ${closingCostMode === val ? 'bg-[#C2983B] text-white' : 'text-gray-400'}`}>
-                        {label === '$' ? sym : label}
-                      </button>
-                    ))}
+                <Label className="text-gray-300 text-sm mb-2 block">Closing Cost</Label>
+                <div className="flex gap-2 items-center">
+                  <div className="flex-1">
+                    {closingCostMode === 'dollar'
+                      ? <NI prefix={sym} value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
+                      : <NI suffix="%" value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
+                    }
                   </div>
+                  <Toggle options={[['$','dollar'],['%','percent']]} value={closingCostMode} onChange={setClosingCostMode} />
                 </div>
-                {closingCostMode === 'dollar'
-                  ? <NI prefix={sym} value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
-                  : <NI suffix="%" value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
-                }
-                {closingCostMode === 'percent' && (parseFloat(closingCost) || 0) > 0 && <p className="text-gray-400 text-xs mt-1">= {fmt(getClosingCostAmount())}</p>}
+                {closingCostMode === 'percent' && pn(closingCost) > 0 && <p className="text-gray-400 text-xs mt-1">= {fmt(getClosingCostAmount())}</p>}
               </div>
               <div>
                 <Label className="text-gray-300 text-sm mb-2 block">Initial Investment</Label>
                 <NI prefix={sym} value={initialInvestment} onChange={handleNumChange(setInitialInvestment)} onBlur={handleNumBlur(setInitialInvestment)} placeholder="0" />
               </div>
             </div>
+
+            <div className="border border-white/10 rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-white/10"><h4 className="text-white font-medium text-sm">Current Numbers</h4></div>
+              <div className="px-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-gray-300 text-sm mb-2 block">Total Income</Label>
+                  <NI prefix={sym} value={currentIncome} onChange={handleNumChange(setCurrentIncome)} onBlur={handleNumBlur(setCurrentIncome)} placeholder="0" />
+                </div>
+                <div>
+                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+                  <NI prefix={sym} value={currentExpenses} onChange={handleNumChange(setCurrentExpenses)} onBlur={handleNumBlur(setCurrentExpenses)} placeholder="0" />
+                </div>
+                <div>
+                  <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
+                  <NI prefix={sym} value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() || '')}
+                    onChange={(e) => { setCurrentNoiEdited(true); handleNumChange(setCurrentNoiOverride)(e); }}
+                    onBlur={handleNumBlur(setCurrentNoiOverride)} placeholder="0" />
+                  {currentNoiEdited
+                    ? <button onClick={() => { setCurrentNoiEdited(false); setCurrentNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
+                    : (pn(currentIncome) || pn(currentExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
+                </div>
+              </div>
+            </div>
+
+            <div className="border border-white/10 rounded-lg overflow-hidden">
+              <div className="px-4 py-3 border-b border-white/10"><h4 className="text-white font-medium text-sm">Pro Forma</h4></div>
+              <div className="px-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label className="text-gray-300 text-sm mb-2 block">Total Income</Label>
+                  <NI prefix={sym} value={proFormaIncome} onChange={handleNumChange(setProFormaIncome)} onBlur={handleNumBlur(setProFormaIncome)} placeholder="0" />
+                </div>
+                <div>
+                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+                  <NI prefix={sym} value={proFormaExpenses} onChange={handleNumChange(setProFormaExpenses)} onBlur={handleNumBlur(setProFormaExpenses)} placeholder="0" />
+                </div>
+                <div>
+                  <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
+                  <NI prefix={sym} value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() || '')}
+                    onChange={(e) => { setProFormaNoiEdited(true); handleNumChange(setProFormaNoiOverride)(e); }}
+                    onBlur={handleNumBlur(setProFormaNoiOverride)} placeholder="0" />
+                  {proFormaNoiEdited
+                    ? <button onClick={() => { setProFormaNoiEdited(false); setProFormaNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
+                    : (pn(proFormaIncome) || pn(proFormaExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
-      {/* Current Numbers */}
-      <div className="border border-white/10 rounded-lg mb-6 overflow-hidden">
-        <div className="px-5 py-3 border-b border-white/10"><h4 className="text-white font-medium text-sm">Current Numbers</h4></div>
-        <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label className="text-gray-300 text-sm mb-2 block">Total Income</Label>
-            <NI prefix={sym} value={currentIncome} onChange={handleNumChange(setCurrentIncome)} onBlur={handleNumBlur(setCurrentIncome)} placeholder="0" />
-          </div>
-          <div>
-            <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
-            <NI prefix={sym} value={currentExpenses} onChange={handleNumChange(setCurrentExpenses)} onBlur={handleNumBlur(setCurrentExpenses)} placeholder="0" />
-          </div>
-          <div>
-            <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
-            <NI prefix={sym}
-              value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() || '')}
-              onChange={(e) => { setCurrentNoiEdited(true); handleNumChange(setCurrentNoiOverride)(e); }}
-              onBlur={handleNumBlur(setCurrentNoiOverride)} placeholder="0" />
-            {currentNoiEdited && <button onClick={() => { setCurrentNoiEdited(false); setCurrentNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>}
-            {!currentNoiEdited && (parseFloat(currentIncome) || parseFloat(currentExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
-          </div>
-        </div>
-      </div>
-
-      {/* Pro Forma */}
-      <div className="border border-white/10 rounded-lg mb-8 overflow-hidden">
-        <div className="px-5 py-3 border-b border-white/10"><h4 className="text-white font-medium text-sm">Pro Forma</h4></div>
-        <div className="px-5 py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label className="text-gray-300 text-sm mb-2 block">Total Income</Label>
-            <NI prefix={sym} value={proFormaIncome} onChange={handleNumChange(setProFormaIncome)} onBlur={handleNumBlur(setProFormaIncome)} placeholder="0" />
-          </div>
-          <div>
-            <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
-            <NI prefix={sym} value={proFormaExpenses} onChange={handleNumChange(setProFormaExpenses)} onBlur={handleNumBlur(setProFormaExpenses)} placeholder="0" />
-          </div>
-          <div>
-            <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
-            <NI prefix={sym}
-              value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() || '')}
-              onChange={(e) => { setProFormaNoiEdited(true); handleNumChange(setProFormaNoiOverride)(e); }}
-              onBlur={handleNumBlur(setProFormaNoiOverride)} placeholder="0" />
-            {proFormaNoiEdited && <button onClick={() => { setProFormaNoiEdited(false); setProFormaNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>}
-            {!proFormaNoiEdited && (parseFloat(proFormaIncome) || parseFloat(proFormaExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
-          </div>
-        </div>
-      </div>
-
       {/* Results */}
-      <div className="pt-6 border-t border-white/10">
-        <p className="text-gray-400 text-sm mb-1">Monthly Payment (P&I):</p>
-        <p className="text-5xl font-bold text-[#C2983B] mb-6">{fmt(getMonthlyPayment())}</p>
+      <div className="border-t border-white/10 pt-6">
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          {[['Loan Amount', fmt(getLoanAmount())], ['LTV Ratio', fmtPct(getLoanAmount() / (parseFloat(propertyValue) || 1) * 100)], ['Annual Debt Service', fmt(getAnnualDebtService())], ['Total Interest', fmt(getTotalInterest())]].map(([label, val]) => (
-            <div key={label} className="bg-white/5 rounded-lg p-3">
-              <p className="text-gray-400 text-xs mb-1">{label}</p>
-              <p className={`text-base font-semibold ${label === 'Total Interest' ? 'text-red-400' : 'text-white'}`}>{val}</p>
+        {/* Monthly Payment + metrics in one box */}
+        <div className="bg-white/5 rounded-xl p-5 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center gap-5">
+            <div className="md:border-r md:border-white/10 md:pr-5">
+              <p className="text-gray-400 text-sm mb-1">Monthly Payment (P&I)</p>
+              <p className="text-3xl font-bold text-[#C2983B]">{fmt(getMonthlyPayment())}</p>
             </div>
-          ))}
+            <div className="flex-1 grid grid-cols-3 gap-3">
+              <div>
+                <p className="text-gray-400 text-xs mb-1">Loan Amount</p>
+                <p className="text-base font-semibold text-white">{fmt(getLoanAmount())}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs mb-1">LTV Ratio</p>
+                <p className="text-base font-semibold text-white">{fmtPct(getLoanAmount() / (pn(propertyValue) || 1) * 100)}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs mb-1">Annual Debt Service</p>
+                <p className="text-base font-semibold text-white">{fmt(getAnnualDebtService())}</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Investment + Current + Pro Forma */}
@@ -907,7 +899,7 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
             <div>
               <MR label="Down Payment" value={fmt(getDownPayment())} />
               <MR label="Closing Cost" value={fmt(getClosingCostAmount())} />
-              <MR label="Initial Investment" value={fmt(parseNumTools(initialInvestment) || 0)} />
+              <MR label="Initial Investment" value={fmt(pn(initialInvestment))} />
             </div>
           </div>
           <div className="bg-white/5 rounded-lg p-4">
@@ -936,7 +928,7 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
         {showAmortization && (
           <div className="mt-6 border-t border-white/10 pt-6">
             <div className="flex gap-2 mb-4">
-              {['yearly', 'monthly'].map(mode => (
+              {['yearly','monthly'].map(mode => (
                 <button key={mode} onClick={() => setViewMode(mode)}
                   className={`flex-1 py-2 rounded-lg transition-colors capitalize ${viewMode === mode ? 'bg-[#C2983B] text-white' : 'bg-[#1a2b4b]/50 text-gray-400'}`}>
                   {mode}
