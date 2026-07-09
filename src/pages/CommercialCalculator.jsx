@@ -297,7 +297,7 @@ export default function CommercialCalculator() {
                             onChange={handleNumChange(setCurrentIncome)} onBlur={handleNumBlur(setCurrentIncome)} placeholder="0" />
                         </div>
                         <div>
-                          <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+                          <Label className="text-gray-300 text-sm mb-2 block">Total Expenses</Label>
                           <NumInput prefix={currentCurrency.symbol} value={currentExpenses}
                             onChange={handleNumChange(setCurrentExpenses)} onBlur={handleNumBlur(setCurrentExpenses)} placeholder="0" />
                         </div>
@@ -326,7 +326,7 @@ export default function CommercialCalculator() {
                             onChange={handleNumChange(setProFormaIncome)} onBlur={handleNumBlur(setProFormaIncome)} placeholder="0" />
                         </div>
                         <div>
-                          <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+                          <Label className="text-gray-300 text-sm mb-2 block">Total Expenses</Label>
                           <NumInput prefix={currentCurrency.symbol} value={proFormaExpenses}
                             onChange={handleNumChange(setProFormaExpenses)} onBlur={handleNumBlur(setProFormaExpenses)} placeholder="0" />
                         </div>
