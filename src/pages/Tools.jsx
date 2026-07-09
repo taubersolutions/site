@@ -752,7 +752,7 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                   <NI prefix={sym} value={currentIncome} onChange={handleNumChange(setCurrentIncome)} onBlur={handleNumBlur(setCurrentIncome)} placeholder="0" />
                 </div>
                 <div>
-                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses</Label>
                   <NI prefix={sym} value={currentExpenses} onChange={handleNumChange(setCurrentExpenses)} onBlur={handleNumBlur(setCurrentExpenses)} placeholder="0" />
                 </div>
                 <div>
@@ -773,7 +773,7 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                   <NI prefix={sym} value={proFormaIncome} onChange={handleNumChange(setProFormaIncome)} onBlur={handleNumBlur(setProFormaIncome)} placeholder="0" />
                 </div>
                 <div>
-                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses</Label>
                   <NI prefix={sym} value={proFormaExpenses} onChange={handleNumChange(setProFormaExpenses)} onBlur={handleNumBlur(setProFormaExpenses)} placeholder="0" />
                 </div>
                 <div>
