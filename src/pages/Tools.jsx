@@ -173,10 +173,23 @@ function InvestmentCalculator({ formatCurrency, currency }) {
 
 function MortgageCalculator({ formatCurrency, currency }) {
   const currentCurrencyObj = currencies.find((c) => c.code === currency);
-  const [homePrice, setHomePrice] = useState('400000');
+  const pn = (v) => parseFloat(String(v).replace(/,/g, '')) || 0;
+  const handleChange = (setter) => (e) => {
+    const raw = e.target.value.replace(/,/g, '');
+    if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
+      if (raw === '' || raw === '.') { setter(raw); return; }
+      const num = parseFloat(raw);
+      if (!isNaN(num)) setter(Number.isInteger(num) ? num.toLocaleString('en-US') : raw);
+    }
+  };
+  const handleBlur = (setter) => (e) => {
+    const val = parseFloat(e.target.value.replace(/,/g, ''));
+    setter(isNaN(val) ? '' : val.toLocaleString('en-US'));
+  };
+  const [homePrice, setHomePrice] = useState('400,000');
   const [downPaymentMode, setDownPaymentMode] = useState('percent');
   const [downPaymentPercent, setDownPaymentPercent] = useState('20');
-  const [downPaymentDollar, setDownPaymentDollar] = useState('80000');
+  const [downPaymentDollar, setDownPaymentDollar] = useState('80,000');
   const [interestRate, setInterestRate] = useState('6.5');
   const [loanTerm, setLoanTerm] = useState('30');
   const [pmi, setPmi] = useState('0');
@@ -188,19 +201,19 @@ function MortgageCalculator({ formatCurrency, currency }) {
   const [viewMode, setViewMode] = useState('yearly');
 
   const getDownPayment = () => {
-    const price = parseFloat(homePrice) || 0;
+    const price = pn(homePrice) || 0;
     if (downPaymentMode === 'percent') {
-      const percent = parseFloat(downPaymentPercent) || 0;
+      const percent = pn(downPaymentPercent) || 0;
       return (price * percent) / 100;
     }
-    return parseFloat(downPaymentDollar) || 0;
+    return pn(downPaymentDollar) || 0;
   };
 
   const calculateMortgage = () => {
-    const price = parseFloat(homePrice) || 0;
+    const price = pn(homePrice) || 0;
     const down = getDownPayment();
-    const rate = parseFloat(interestRate) || 0;
-    const term = parseFloat(loanTerm) || 0;
+    const rate = pn(interestRate) || 0;
+    const term = pn(loanTerm) || 0;
     const principal = price - down;
     const r = rate / 100 / 12;
     const n = term * 12;
@@ -211,10 +224,10 @@ function MortgageCalculator({ formatCurrency, currency }) {
   };
 
   const calculateAmortization = () => {
-    const price = parseFloat(homePrice) || 0;
+    const price = pn(homePrice) || 0;
     const down = getDownPayment();
-    const rate = parseFloat(interestRate) || 0;
-    const term = parseFloat(loanTerm) || 0;
+    const rate = pn(interestRate) || 0;
+    const term = pn(loanTerm) || 0;
     const principal = price - down;
     const r = rate / 100 / 12;
     const monthlyPayment = calculateMortgage().monthlyPayment;
@@ -275,17 +288,9 @@ function MortgageCalculator({ formatCurrency, currency }) {
               </span>
               <Input
                 type="text"
-                value={parseFloat(homePrice) ? parseFloat(homePrice).toLocaleString() : ''}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/,/g, '');
-                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                    setHomePrice(val);
-                  }
-                }}
-                onBlur={(e) => {
-                  const val = parseFloat(e.target.value.replace(/,/g, ''));
-                  setHomePrice(isNaN(val) ? '0' : val.toString());
-                }}
+                value={pn(homePrice) ? pn(homePrice).toLocaleString() : ''}
+                onChange={handleChange(setHomePrice)}
+                onBlur={handleBlur(setHomePrice)}
                 placeholder="400,000"
                 className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
             </div>
@@ -325,25 +330,9 @@ function MortgageCalculator({ formatCurrency, currency }) {
               )}
               <Input
                 type="text"
-                value={downPaymentMode === 'percent' ? downPaymentPercent : (parseFloat(downPaymentDollar) ? parseFloat(downPaymentDollar).toLocaleString() : '')}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/,/g, '');
-                  if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                    if (downPaymentMode === 'percent') {
-                      setDownPaymentPercent(val);
-                    } else {
-                      setDownPaymentDollar(val);
-                    }
-                  }
-                }}
-                onBlur={(e) => {
-                  const val = parseFloat(e.target.value.replace(/,/g, ''));
-                  if (downPaymentMode === 'percent') {
-                    setDownPaymentPercent(isNaN(val) ? '0' : val.toString());
-                  } else {
-                    setDownPaymentDollar(isNaN(val) ? '0' : val.toString());
-                  }
-                }}
+                value={downPaymentMode === 'percent' ? downPaymentPercent : (pn(downPaymentDollar) ? pn(downPaymentDollar).toLocaleString() : '')}
+                onChange={handleChange(downPaymentMode === 'percent' ? setDownPaymentPercent : setDownPaymentDollar)}
+                onBlur={handleBlur(downPaymentMode === 'percent' ? setDownPaymentPercent : setDownPaymentDollar)}
                 placeholder={downPaymentMode === 'percent' ? '20' : '80,000'}
                 className={`h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg ${
                   downPaymentMode === 'dollar' ? 'pl-10' : 'pr-10'
@@ -351,7 +340,7 @@ function MortgageCalculator({ formatCurrency, currency }) {
             </div>
             {downPaymentMode === 'percent' && (
               <p className="text-gray-400 text-xs mt-1">
-                = {formatCurrency(((parseFloat(homePrice) || 0) * (parseFloat(downPaymentPercent) || 0)) / 100)}
+                = {formatCurrency(((pn(homePrice) || 0) * (pn(downPaymentPercent) || 0)) / 100)}
               </p>
             )}
           </div>
@@ -362,16 +351,8 @@ function MortgageCalculator({ formatCurrency, currency }) {
             <Input
               type="text"
               value={interestRate}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                  setInterestRate(val);
-                }
-              }}
-              onBlur={(e) => {
-                const val = parseFloat(e.target.value);
-                setInterestRate(isNaN(val) ? '0' : val.toString());
-              }}
+              onChange={handleChange(setInterestRate)}
+              onBlur={handleBlur(setInterestRate)}
               placeholder="6.5"
               className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           </div>
@@ -380,16 +361,8 @@ function MortgageCalculator({ formatCurrency, currency }) {
             <Input
               type="text"
               value={loanTerm}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                  setLoanTerm(val);
-                }
-              }}
-              onBlur={(e) => {
-                const val = parseFloat(e.target.value);
-                setLoanTerm(isNaN(val) ? '0' : val.toString());
-              }}
+              onChange={handleChange(setLoanTerm)}
+              onBlur={handleBlur(setLoanTerm)}
               placeholder="30"
               className="h-14 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
           </div>
@@ -413,17 +386,9 @@ function MortgageCalculator({ formatCurrency, currency }) {
                 </span>
                 <Input
                   type="text"
-                  value={parseFloat(propertyTax) ? parseFloat(propertyTax).toLocaleString() : ''}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/,/g, '');
-                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                      setPropertyTax(val);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    const val = parseFloat(e.target.value.replace(/,/g, ''));
-                    setPropertyTax(isNaN(val) ? '0' : val.toString());
-                  }}
+                  value={pn(propertyTax) ? pn(propertyTax).toLocaleString() : ''}
+                  onChange={handleChange(setPropertyTax)}
+                onBlur={handleBlur(setPropertyTax)}
                   placeholder="0"
                   className="h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
               </div>
@@ -437,17 +402,9 @@ function MortgageCalculator({ formatCurrency, currency }) {
                 </span>
                 <Input
                   type="text"
-                  value={parseFloat(homeInsurance) ? parseFloat(homeInsurance).toLocaleString() : ''}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/,/g, '');
-                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                      setHomeInsurance(val);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    const val = parseFloat(e.target.value.replace(/,/g, ''));
-                    setHomeInsurance(isNaN(val) ? '0' : val.toString());
-                  }}
+                  value={pn(homeInsurance) ? pn(homeInsurance).toLocaleString() : ''}
+                  onChange={handleChange(setHomeInsurance)}
+                onBlur={handleBlur(setHomeInsurance)}
                   placeholder="0"
                   className="h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
               </div>
@@ -461,17 +418,9 @@ function MortgageCalculator({ formatCurrency, currency }) {
                 </span>
                 <Input
                   type="text"
-                  value={parseFloat(management) ? parseFloat(management).toLocaleString() : ''}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/,/g, '');
-                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                      setManagement(val);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    const val = parseFloat(e.target.value.replace(/,/g, ''));
-                    setManagement(isNaN(val) ? '0' : val.toString());
-                  }}
+                  value={pn(management) ? pn(management).toLocaleString() : ''}
+                  onChange={handleChange(setManagement)}
+                onBlur={handleBlur(setManagement)}
                   placeholder="0"
                   className="h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
               </div>
@@ -485,17 +434,9 @@ function MortgageCalculator({ formatCurrency, currency }) {
                 </span>
                 <Input
                   type="text"
-                  value={parseFloat(pmi) ? parseFloat(pmi).toLocaleString() : ''}
-                  onChange={(e) => {
-                    const val = e.target.value.replace(/,/g, '');
-                    if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                      setPmi(val);
-                    }
-                  }}
-                  onBlur={(e) => {
-                    const val = parseFloat(e.target.value.replace(/,/g, ''));
-                    setPmi(isNaN(val) ? '0' : val.toString());
-                  }}
+                  value={pn(pmi) ? pn(pmi).toLocaleString() : ''}
+                  onChange={handleChange(setPmi)}
+                onBlur={handleBlur(setPmi)}
                   placeholder="0"
                   className="h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pl-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
               </div>
@@ -510,7 +451,7 @@ function MortgageCalculator({ formatCurrency, currency }) {
         <div className="mb-4">
           <p className="text-gray-400 text-sm mb-1">Total Monthly Payment:</p>
           <p className="text-5xl font-bold text-[#C2983B]">
-            {formatCurrency(result.monthlyPayment + (parseFloat(pmi) || 0) + (parseFloat(propertyTax) || 0) / 12 + (parseFloat(homeInsurance) || 0) / 12 + (parseFloat(management) || 0))}
+            {formatCurrency(result.monthlyPayment + (pn(pmi) || 0) + (pn(propertyTax) || 0) / 12 + (pn(homeInsurance) || 0) / 12 + (pn(management) || 0))}
           </p>
         </div>
 
@@ -528,19 +469,19 @@ function MortgageCalculator({ formatCurrency, currency }) {
             <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-400">Property Tax</span>
-                <span className="text-white">{formatCurrency((parseFloat(propertyTax) || 0) / 12)}</span>
+                <span className="text-white">{formatCurrency((pn(propertyTax) || 0) / 12)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Home Insurance</span>
-                <span className="text-white">{formatCurrency((parseFloat(homeInsurance) || 0) / 12)}</span>
+                <span className="text-white">{formatCurrency((pn(homeInsurance) || 0) / 12)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">Management</span>
-                <span className="text-white">{formatCurrency(parseFloat(management) || 0)}</span>
+                <span className="text-white">{formatCurrency(pn(management) || 0)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-400">PMI</span>
-                <span className="text-white">{formatCurrency(parseFloat(pmi) || 0)}</span>
+                <span className="text-white">{formatCurrency(pn(pmi) || 0)}</span>
               </div>
             </div>
           </div>
@@ -662,10 +603,7 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
     if (downPaymentMode === 'ltv') return price * (100 - pn(downPaymentPercent)) / 100;
     return pn(downPaymentDollar);
   };
-  const getClosingCostAmount = () => {
-    const cc = pn(closingCost);
-    return closingCostMode === 'percent' ? pn(propertyValue) * cc / 100 : cc;
-  };
+  const getClosingCostAmount = () => closingCostMode === 'percent' ? pn(propertyValue) * pn(closingCost) / 100 : pn(closingCost);
   const getTotalDueAtClosing = () => getDownPayment() + getClosingCostAmount() + pn(initialInvestment);
   const getLoanAmount = () => pn(propertyValue) - getDownPayment();
   const getMonthlyPayment = () => {
@@ -748,7 +686,6 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
         <h3 className="text-2xl font-bold text-white">Commercial Mortgage</h3>
       </div>
 
-      {/* Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <Label className="text-gray-300 text-sm mb-2 block">Property Value</Label>
@@ -769,7 +706,6 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
         </div>
       </div>
 
-      {/* Row 2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <Label className="text-gray-300 text-sm mb-2 block">Interest Rate</Label>
@@ -781,7 +717,6 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
         </div>
       </div>
 
-      {/* Additional Information */}
       <div className="border border-white/10 rounded-lg mb-8 overflow-hidden">
         <button onClick={() => setShowAdditional(!showAdditional)}
           className="w-full flex items-center justify-between px-5 py-4 text-white hover:bg-white/5 transition-colors">
@@ -809,7 +744,6 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                 <NI prefix={sym} value={initialInvestment} onChange={handleNumChange(setInitialInvestment)} onBlur={handleNumBlur(setInitialInvestment)} placeholder="0" />
               </div>
             </div>
-
             <div className="border border-white/10 rounded-lg overflow-hidden">
               <div className="px-4 py-3 border-b border-white/10"><h4 className="text-white font-medium text-sm">Current Numbers</h4></div>
               <div className="px-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -826,13 +760,11 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                   <NI prefix={sym} value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() || '')}
                     onChange={(e) => { setCurrentNoiEdited(true); handleNumChange(setCurrentNoiOverride)(e); }}
                     onBlur={handleNumBlur(setCurrentNoiOverride)} placeholder="0" />
-                  {currentNoiEdited
-                    ? <button onClick={() => { setCurrentNoiEdited(false); setCurrentNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
+                  {currentNoiEdited ? <button onClick={() => { setCurrentNoiEdited(false); setCurrentNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
                     : (pn(currentIncome) || pn(currentExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
                 </div>
               </div>
             </div>
-
             <div className="border border-white/10 rounded-lg overflow-hidden">
               <div className="px-4 py-3 border-b border-white/10"><h4 className="text-white font-medium text-sm">Pro Forma</h4></div>
               <div className="px-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -849,8 +781,7 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                   <NI prefix={sym} value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() || '')}
                     onChange={(e) => { setProFormaNoiEdited(true); handleNumChange(setProFormaNoiOverride)(e); }}
                     onBlur={handleNumBlur(setProFormaNoiOverride)} placeholder="0" />
-                  {proFormaNoiEdited
-                    ? <button onClick={() => { setProFormaNoiEdited(false); setProFormaNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
+                  {proFormaNoiEdited ? <button onClick={() => { setProFormaNoiEdited(false); setProFormaNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
                     : (pn(proFormaIncome) || pn(proFormaExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
                 </div>
               </div>
@@ -859,10 +790,7 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
         )}
       </div>
 
-      {/* Results */}
       <div className="border-t border-white/10 pt-6">
-
-        {/* Monthly Payment + metrics in one box */}
         <div className="bg-white/5 rounded-xl p-5 mb-6">
           <div className="flex flex-col md:flex-row md:items-center gap-5">
             <div className="md:border-r md:border-white/10 md:pr-5">
@@ -886,7 +814,6 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
           </div>
         </div>
 
-        {/* Investment + Current + Pro Forma */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="bg-white/5 rounded-lg p-4 flex flex-col justify-between">
             <div>
