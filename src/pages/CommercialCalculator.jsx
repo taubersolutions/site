@@ -46,6 +46,19 @@ function MetricRow({ label, value, highlight, isNegative }) {
   );
 }
 
+function Toggle({ options, value, onChange, sym }) {
+  return (
+    <div className="flex gap-1 bg-white/10 rounded-lg p-0.5 shrink-0">
+      {options.map(([label, val]) => (
+        <button key={val} onClick={() => onChange(val)}
+          className={`px-3 py-1 text-xs rounded transition-colors ${value === val ? 'bg-[#C2983B] text-white' : 'text-gray-400'}`}>
+          {label === '$' ? sym : label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 export default function CommercialCalculator() {
   const isUKSession = sessionStorage.getItem('isUKSession') === 'true';
   const [currency, setCurrency] = useState(() => {
@@ -157,16 +170,7 @@ export default function CommercialCalculator() {
   const currentNOI = getCurrentNOI();
   const proFormaNOI = getProFormaNOI();
 
-  const Toggle = ({ options, value, onChange }) => (
-    <div className="flex gap-1 bg-white/10 rounded-lg p-0.5 shrink-0">
-      {options.map(([label, val]) => (
-        <button key={val} onClick={() => onChange(val)}
-          className={`px-3 py-1 text-xs rounded transition-colors ${value === val ? 'bg-[#C2983B] text-white' : 'text-gray-400'}`}>
-          {label === '$' ? currentCurrency.symbol : label}
-        </button>
-      ))}
-    </div>
-  );
+
 
   return (
     <div className="pt-20">
@@ -227,7 +231,7 @@ export default function CommercialCalculator() {
                             placeholder={downPaymentMode === 'ltv' ? 'LTV %' : '25'} />
                       }
                     </div>
-                    <Toggle options={[['$','dollar'],['%','percent'],['LTV','ltv']]} value={downPaymentMode} onChange={setDownPaymentMode} />
+                    <Toggle sym={currentCurrency.symbol} options={[['$','dollar'],['%','percent'],['LTV','ltv']]} value={downPaymentMode} onChange={setDownPaymentMode} />
                   </div>
                   {downPaymentMode !== 'dollar' && (
                     <p className="text-gray-400 text-xs mt-1">= {formatCurrency(getDownPayment())}{downPaymentMode === 'ltv' ? ` (Loan: ${formatCurrency(getLoanAmount())})` : ''}</p>
@@ -272,7 +276,7 @@ export default function CommercialCalculator() {
                                   onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
                             }
                           </div>
-                          <Toggle options={[['$','dollar'],['%','percent']]} value={closingCostMode} onChange={setClosingCostMode} />
+                          <Toggle sym={currentCurrency.symbol} options={[['$','dollar'],['%','percent']]} value={closingCostMode} onChange={setClosingCostMode} />
                         </div>
                         {closingCostMode === 'percent' && parseNum(closingCost) > 0 && (
                           <p className="text-gray-400 text-xs mt-1">= {formatCurrency(getClosingCostAmount())}</p>
