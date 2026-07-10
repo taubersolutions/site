@@ -556,6 +556,34 @@ function MortgageCalculator({ formatCurrency, currency }) {
 
 }
 
+const CommNI = ({ value, onChange, onBlur, placeholder, prefix, suffix, inputCls, inputClsR, inputClsP }) => (
+  <div className="relative">
+    {prefix && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{prefix}</span>}
+    {suffix && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{suffix}</span>}
+    <Input type="text" value={value} onChange={onChange} onBlur={onBlur} placeholder={placeholder}
+      className={prefix ? inputCls : suffix ? inputClsR : inputClsP} />
+  </div>
+);
+
+const CommToggle = ({ options, value, onChange, sym }) => (
+  <div className="flex gap-1 bg-white/10 rounded-lg p-0.5 shrink-0">
+    {options.map(([label, val]) => (
+      <button key={val} onClick={() => onChange(val)}
+        className={`px-3 py-1 text-xs rounded transition-colors ${value === val ? 'bg-[#C2983B] text-white' : 'text-gray-400'}`}>
+        {label === '$' ? sym : label}
+      </button>
+    ))}
+  </div>
+);
+
+const CommMR = ({ label, value, highlight, isNeg }) => (
+  <div className="flex justify-between items-center py-2 border-b border-white/5">
+    <span className="text-gray-400 text-sm">{label}</span>
+    <span className={`font-semibold text-sm ${highlight ? 'text-green-400' : isNeg ? 'text-red-400' : 'text-white'}`}>{value}</span>
+  </div>
+);
+
+
 function CommercialMortgageCalculator({ formatCurrency, currency }) {
   const currentCurrencyObj = currencies.find((c) => c.code === currency);
   const sym = currentCurrencyObj.symbol;
@@ -650,32 +678,7 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
   const inputClsR = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg pr-10 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
   const inputClsP = "h-12 bg-[#1a2b4b]/50 border-white/20 text-white placeholder:text-gray-500 focus:border-[#C2983B] rounded-lg [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
-  const NI = ({ value, onChange, onBlur, placeholder, prefix, suffix }) => (
-    <div className="relative">
-      {prefix && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{prefix}</span>}
-      {suffix && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/60 text-sm">{suffix}</span>}
-      <Input type="text" value={value} onChange={onChange} onBlur={onBlur} placeholder={placeholder}
-        className={prefix ? inputCls : suffix ? inputClsR : inputClsP} />
-    </div>
-  );
 
-  const Toggle = ({ options, value, onChange }) => (
-    <div className="flex gap-1 bg-white/10 rounded-lg p-0.5 shrink-0">
-      {options.map(([label, val]) => (
-        <button key={val} onClick={() => onChange(val)}
-          className={`px-3 py-1 text-xs rounded transition-colors ${value === val ? 'bg-[#C2983B] text-white' : 'text-gray-400'}`}>
-          {label === '$' ? sym : label}
-        </button>
-      ))}
-    </div>
-  );
-
-  const MR = ({ label, value, highlight, isNeg }) => (
-    <div className="flex justify-between items-center py-2 border-b border-white/5">
-      <span className="text-gray-400 text-sm">{label}</span>
-      <span className={`font-semibold text-sm ${highlight ? 'text-green-400' : isNeg ? 'text-red-400' : 'text-white'}`}>{value}</span>
-    </div>
-  );
 
   return (
     <div className="bg-[#2c3e50] rounded-xl p-8 border border-white/10">
@@ -689,18 +692,18 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <Label className="text-gray-300 text-sm mb-2 block">Property Value</Label>
-          <NI prefix={sym} value={propertyValue} onChange={handleNumChange(setPropertyValue)} onBlur={handleNumBlur(setPropertyValue)} placeholder="1,500,000" />
+          <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={propertyValue} onChange={handleNumChange(setPropertyValue)} onBlur={handleNumBlur(setPropertyValue)} placeholder="1,500,000" />
         </div>
         <div>
           <Label className="text-gray-300 text-sm mb-2 block">Down Payment</Label>
           <div className="flex gap-2 items-center">
             <div className="flex-1">
               {downPaymentMode === 'dollar'
-                ? <NI prefix={sym} value={downPaymentDollar} onChange={handleNumChange(setDownPaymentDollar)} onBlur={handleNumBlur(setDownPaymentDollar)} placeholder="375,000" />
-                : <NI suffix="%" value={downPaymentPercent} onChange={handleNumChange(setDownPaymentPercent)} onBlur={handleNumBlur(setDownPaymentPercent)} placeholder={downPaymentMode === 'ltv' ? 'LTV %' : '25'} />
+                ? <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={downPaymentDollar} onChange={handleNumChange(setDownPaymentDollar)} onBlur={handleNumBlur(setDownPaymentDollar)} placeholder="375,000" />
+                : <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} suffix="%" value={downPaymentPercent} onChange={handleNumChange(setDownPaymentPercent)} onBlur={handleNumBlur(setDownPaymentPercent)} placeholder={downPaymentMode === 'ltv' ? 'LTV %' : '25'} />
               }
             </div>
-            <Toggle options={[['$','dollar'],['%','percent'],['LTV','ltv']]} value={downPaymentMode} onChange={setDownPaymentMode} />
+            <CommToggle sym={sym} options={[['$','dollar'],['%','percent'],['LTV','ltv']]} value={downPaymentMode} onChange={setDownPaymentMode} />
           </div>
           {downPaymentMode !== 'dollar' && <p className="text-gray-400 text-xs mt-1">= {fmt(getDownPayment())}</p>}
         </div>
@@ -709,11 +712,11 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <Label className="text-gray-300 text-sm mb-2 block">Interest Rate</Label>
-          <NI suffix="%" value={interestRate} onChange={handleNumChange(setInterestRate)} onBlur={handleNumBlur(setInterestRate)} placeholder="7.5" />
+          <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} suffix="%" value={interestRate} onChange={handleNumChange(setInterestRate)} onBlur={handleNumBlur(setInterestRate)} placeholder="7.5" />
         </div>
         <div>
           <Label className="text-gray-300 text-sm mb-2 block">Amortization (Loan Term in Years)</Label>
-          <NI value={loanTerm} onChange={handleNumChange(setLoanTerm)} onBlur={handleNumBlur(setLoanTerm)} placeholder="20" />
+          <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} value={loanTerm} onChange={handleNumChange(setLoanTerm)} onBlur={handleNumBlur(setLoanTerm)} placeholder="20" />
         </div>
       </div>
 
@@ -731,17 +734,17 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                 <div className="flex gap-2 items-center">
                   <div className="flex-1">
                     {closingCostMode === 'dollar'
-                      ? <NI prefix={sym} value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
-                      : <NI suffix="%" value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
+                      ? <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
+                      : <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} suffix="%" value={closingCost} onChange={handleNumChange(setClosingCost)} onBlur={handleNumBlur(setClosingCost)} placeholder="0" />
                     }
                   </div>
-                  <Toggle options={[['$','dollar'],['%','percent']]} value={closingCostMode} onChange={setClosingCostMode} />
+                  <CommToggle sym={sym} options={[['$','dollar'],['%','percent']]} value={closingCostMode} onChange={setClosingCostMode} />
                 </div>
                 {closingCostMode === 'percent' && pn(closingCost) > 0 && <p className="text-gray-400 text-xs mt-1">= {fmt(getClosingCostAmount())}</p>}
               </div>
               <div>
                 <Label className="text-gray-300 text-sm mb-2 block">Initial Investment</Label>
-                <NI prefix={sym} value={initialInvestment} onChange={handleNumChange(setInitialInvestment)} onBlur={handleNumBlur(setInitialInvestment)} placeholder="0" />
+                <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={initialInvestment} onChange={handleNumChange(setInitialInvestment)} onBlur={handleNumBlur(setInitialInvestment)} placeholder="0" />
               </div>
             </div>
             <div className="border border-white/10 rounded-lg overflow-hidden">
@@ -749,15 +752,15 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
               <div className="px-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">Total Income</Label>
-                  <NI prefix={sym} value={currentIncome} onChange={handleNumChange(setCurrentIncome)} onBlur={handleNumBlur(setCurrentIncome)} placeholder="0" />
+                  <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={currentIncome} onChange={handleNumChange(setCurrentIncome)} onBlur={handleNumBlur(setCurrentIncome)} placeholder="0" />
                 </div>
                 <div>
-                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses</Label>
-                  <NI prefix={sym} value={currentExpenses} onChange={handleNumChange(setCurrentExpenses)} onBlur={handleNumBlur(setCurrentExpenses)} placeholder="0" />
+                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+                  <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={currentExpenses} onChange={handleNumChange(setCurrentExpenses)} onBlur={handleNumBlur(setCurrentExpenses)} placeholder="0" />
                 </div>
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
-                  <NI prefix={sym} value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() || '')}
+                  <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() || '')}
                     onChange={(e) => { setCurrentNoiEdited(true); handleNumChange(setCurrentNoiOverride)(e); }}
                     onBlur={handleNumBlur(setCurrentNoiOverride)} placeholder="0" />
                   {currentNoiEdited ? <button onClick={() => { setCurrentNoiEdited(false); setCurrentNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
@@ -770,15 +773,15 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
               <div className="px-4 py-4 grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">Total Income</Label>
-                  <NI prefix={sym} value={proFormaIncome} onChange={handleNumChange(setProFormaIncome)} onBlur={handleNumBlur(setProFormaIncome)} placeholder="0" />
+                  <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={proFormaIncome} onChange={handleNumChange(setProFormaIncome)} onBlur={handleNumBlur(setProFormaIncome)} placeholder="0" />
                 </div>
                 <div>
-                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses</Label>
-                  <NI prefix={sym} value={proFormaExpenses} onChange={handleNumChange(setProFormaExpenses)} onBlur={handleNumBlur(setProFormaExpenses)} placeholder="0" />
+                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+                  <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={proFormaExpenses} onChange={handleNumChange(setProFormaExpenses)} onBlur={handleNumBlur(setProFormaExpenses)} placeholder="0" />
                 </div>
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
-                  <NI prefix={sym} value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() || '')}
+                  <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() || '')}
                     onChange={(e) => { setProFormaNoiEdited(true); handleNumChange(setProFormaNoiOverride)(e); }}
                     onBlur={handleNumBlur(setProFormaNoiOverride)} placeholder="0" />
                   {proFormaNoiEdited ? <button onClick={() => { setProFormaNoiEdited(false); setProFormaNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
@@ -824,26 +827,26 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
               </div>
             </div>
             <div>
-              <MR label="Down Payment" value={fmt(getDownPayment())} />
-              <MR label="Closing Cost" value={fmt(getClosingCostAmount())} />
-              <MR label="Initial Investment" value={fmt(pn(initialInvestment))} />
+              <CommMR label="Down Payment" value={fmt(getDownPayment())} />
+              <CommMR label="Closing Cost" value={fmt(getClosingCostAmount())} />
+              <CommMR label="Initial Investment" value={fmt(pn(initialInvestment))} />
             </div>
           </div>
           <div className="bg-white/5 rounded-lg p-4">
             <h4 className="text-[#C2983B] font-semibold text-sm mb-3">Current</h4>
-            <MR label="NOI" value={fmt(currentNOI)} />
-            <MR label="Cap Rate" value={fmtPct(getCapRate(currentNOI))} />
-            <MR label="Net Profit" value={fmt(getNetProfit(currentNOI))} isNeg={getNetProfit(currentNOI) < 0} />
-            <MR label="Cash on Cash" value={fmtPct(getCashOnCash(currentNOI))} highlight={getCashOnCash(currentNOI) > 0} isNeg={getCashOnCash(currentNOI) < 0} />
-            <MR label="DSCR" value={`${getDSCR(currentNOI).toFixed(2)}x`} highlight={getDSCR(currentNOI) >= 1.25} isNeg={getDSCR(currentNOI) < 1.25 && getDSCR(currentNOI) > 0} />
+            <CommMR label="NOI" value={fmt(currentNOI)} />
+            <CommMR label="Cap Rate" value={fmtPct(getCapRate(currentNOI))} />
+            <CommMR label="Net Profit" value={fmt(getNetProfit(currentNOI))} isNeg={getNetProfit(currentNOI) < 0} />
+            <CommMR label="Cash on Cash" value={fmtPct(getCashOnCash(currentNOI))} highlight={getCashOnCash(currentNOI) > 0} isNeg={getCashOnCash(currentNOI) < 0} />
+            <CommMR label="DSCR" value={`${getDSCR(currentNOI).toFixed(2)}x`} highlight={getDSCR(currentNOI) >= 1.25} isNeg={getDSCR(currentNOI) < 1.25 && getDSCR(currentNOI) > 0} />
           </div>
           <div className="bg-white/5 rounded-lg p-4">
             <h4 className="text-[#C2983B] font-semibold text-sm mb-3">Pro Forma</h4>
-            <MR label="NOI" value={fmt(proFormaNOI)} />
-            <MR label="Cap Rate" value={fmtPct(getCapRate(proFormaNOI))} />
-            <MR label="Net Profit" value={fmt(getNetProfit(proFormaNOI))} isNeg={getNetProfit(proFormaNOI) < 0} />
-            <MR label="Cash on Cash" value={fmtPct(getCashOnCash(proFormaNOI))} highlight={getCashOnCash(proFormaNOI) > 0} isNeg={getCashOnCash(proFormaNOI) < 0} />
-            <MR label="DSCR" value={`${getDSCR(proFormaNOI).toFixed(2)}x`} highlight={getDSCR(proFormaNOI) >= 1.25} isNeg={getDSCR(proFormaNOI) < 1.25 && getDSCR(proFormaNOI) > 0} />
+            <CommMR label="NOI" value={fmt(proFormaNOI)} />
+            <CommMR label="Cap Rate" value={fmtPct(getCapRate(proFormaNOI))} />
+            <CommMR label="Net Profit" value={fmt(getNetProfit(proFormaNOI))} isNeg={getNetProfit(proFormaNOI) < 0} />
+            <CommMR label="Cash on Cash" value={fmtPct(getCashOnCash(proFormaNOI))} highlight={getCashOnCash(proFormaNOI) > 0} isNeg={getCashOnCash(proFormaNOI) < 0} />
+            <CommMR label="DSCR" value={`${getDSCR(proFormaNOI).toFixed(2)}x`} highlight={getDSCR(proFormaNOI) >= 1.25} isNeg={getDSCR(proFormaNOI) < 1.25 && getDSCR(proFormaNOI) > 0} />
           </div>
         </div>
 
