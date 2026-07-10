@@ -155,15 +155,17 @@ export default function CommercialCalculator() {
 
   const handleNumChange = (setter) => (e) => {
     const raw = e.target.value.replace(/,/g, '');
-    if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
-      if (raw === '' || raw === '.') { setter(raw); return; }
-      const num = parseFloat(raw);
-      if (!isNaN(num)) setter(Number.isInteger(num) ? num.toLocaleString('en-US') : raw);
-    }
+    if (raw === '' || /^\d*\.?\d*$/.test(raw)) setter(raw);
   };
   const handleNumBlur = (setter) => (e) => {
-    const val = parseFloat(e.target.value.replace(/,/g, ''));
-    setter(isNaN(val) ? '' : val.toLocaleString('en-US'));
+    const raw = e.target.value.replace(/,/g, '');
+    const val = parseFloat(raw);
+    if (isNaN(val)) { setter(''); return; }
+    if (raw.includes('.')) {
+      setter(raw);
+    } else {
+      setter(val.toLocaleString('en-US'));
+    }
   };
 
   const amortization = calculateAmortization();
@@ -308,7 +310,7 @@ export default function CommercialCalculator() {
                         <div>
                           <Label className="text-gray-300 text-sm mb-2 block">NOI (Net Operating Income)</Label>
                           <NumInput prefix={currentCurrency.symbol}
-                            value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() || '')}
+                            value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() ? Math.round(getCurrentNOI()).toLocaleString('en-US') : '')}
                             onChange={(e) => { setCurrentNoiEdited(true); handleNumChange(setCurrentNoiOverride)(e); }}
                             onBlur={handleNumBlur(setCurrentNoiOverride)} placeholder="0" />
                           {currentNoiEdited
@@ -337,7 +339,7 @@ export default function CommercialCalculator() {
                         <div>
                           <Label className="text-gray-300 text-sm mb-2 block">NOI (Net Operating Income)</Label>
                           <NumInput prefix={currentCurrency.symbol}
-                            value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() || '')}
+                            value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() ? Math.round(getProFormaNOI()).toLocaleString('en-US') : '')}
                             onChange={(e) => { setProFormaNoiEdited(true); handleNumChange(setProFormaNoiOverride)(e); }}
                             onBlur={handleNumBlur(setProFormaNoiOverride)} placeholder="0" />
                           {proFormaNoiEdited
