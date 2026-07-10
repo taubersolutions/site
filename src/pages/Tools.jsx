@@ -176,17 +176,19 @@ function MortgageCalculator({ formatCurrency, currency }) {
   const pn = (v) => parseFloat(String(v).replace(/,/g, '')) || 0;
   const handleChange = (setter) => (e) => {
     const raw = e.target.value.replace(/,/g, '');
-    if (raw === '' || /^\d*\.?\d*$/.test(raw)) setter(raw);
+    if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) return;
+    if (raw === '' || raw === '.') { setter(raw); return; }
+    const [intPart, decPart] = raw.split('.');
+    const grouped = intPart === '' ? '' : parseInt(intPart, 10).toLocaleString('en-US');
+    setter(decPart === undefined ? grouped : grouped + '.' + decPart);
   };
   const handleBlur = (setter) => (e) => {
     const raw = e.target.value.replace(/,/g, '');
     const val = parseFloat(raw);
     if (isNaN(val)) { setter(''); return; }
-    if (raw.includes('.')) {
-      setter(raw);
-    } else {
-      setter(val.toLocaleString('en-US'));
-    }
+    const [intPart, decPart] = raw.split('.');
+    const grouped = parseInt(intPart || '0', 10).toLocaleString('en-US');
+    setter(decPart ? grouped + '.' + decPart : grouped);
   };
   const [homePrice, setHomePrice] = useState('400,000');
   const [downPaymentMode, setDownPaymentMode] = useState('percent');
@@ -616,17 +618,19 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
 
   const handleNumChange = (setter) => (e) => {
     const raw = e.target.value.replace(/,/g, '');
-    if (raw === '' || /^\d*\.?\d*$/.test(raw)) setter(raw);
+    if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) return;
+    if (raw === '' || raw === '.') { setter(raw); return; }
+    const [intPart, decPart] = raw.split('.');
+    const grouped = intPart === '' ? '' : parseInt(intPart, 10).toLocaleString('en-US');
+    setter(decPart === undefined ? grouped : grouped + '.' + decPart);
   };
   const handleNumBlur = (setter) => (e) => {
     const raw = e.target.value.replace(/,/g, '');
     const val = parseFloat(raw);
     if (isNaN(val)) { setter(''); return; }
-    if (raw.includes('.')) {
-      setter(raw);
-    } else {
-      setter(val.toLocaleString('en-US'));
-    }
+    const [intPart, decPart] = raw.split('.');
+    const grouped = parseInt(intPart || '0', 10).toLocaleString('en-US');
+    setter(decPart ? grouped + '.' + decPart : grouped);
   };
 
   const getDownPayment = () => {
@@ -759,21 +763,13 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                   <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={currentIncome} onChange={handleNumChange(setCurrentIncome)} onBlur={handleNumBlur(setCurrentIncome)} placeholder="0" />
                 </div>
                 <div>
-                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses</Label>
                   <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={currentExpenses} onChange={handleNumChange(setCurrentExpenses)} onBlur={handleNumBlur(setCurrentExpenses)} placeholder="0" />
                 </div>
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
                   <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() ? Math.round(getCurrentNOI()).toLocaleString('en-US') : '')}
-                    onChange={(e) => {
-                              if (!currentNoiEdited) {
-                                setCurrentNoiEdited(true);
-                                const raw = e.target.value.replace(/,/g, '');
-                                if (raw === '' || /^\d*\.?\d*$/.test(raw)) setCurrentNoiOverride(raw);
-                              } else {
-                                handleNumChange(setCurrentNoiOverride)(e);
-                              }
-                            }}
+                    onChange={(e) => { handleNumChange(setCurrentNoiOverride)(e); setCurrentNoiEdited(true); }}
                     onBlur={handleNumBlur(setCurrentNoiOverride)} placeholder="0" />
                   {currentNoiEdited ? <button onClick={() => { setCurrentNoiEdited(false); setCurrentNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
                     : (pn(currentIncome) || pn(currentExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
@@ -788,21 +784,13 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                   <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={proFormaIncome} onChange={handleNumChange(setProFormaIncome)} onBlur={handleNumBlur(setProFormaIncome)} placeholder="0" />
                 </div>
                 <div>
-                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses (excl. mortgage)</Label>
+                  <Label className="text-gray-300 text-sm mb-2 block">Total Expenses</Label>
                   <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={proFormaExpenses} onChange={handleNumChange(setProFormaExpenses)} onBlur={handleNumBlur(setProFormaExpenses)} placeholder="0" />
                 </div>
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
                   <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() ? Math.round(getProFormaNOI()).toLocaleString('en-US') : '')}
-                    onChange={(e) => {
-                              if (!proFormaNoiEdited) {
-                                setProFormaNoiEdited(true);
-                                const raw = e.target.value.replace(/,/g, '');
-                                if (raw === '' || /^\d*\.?\d*$/.test(raw)) setProFormaNoiOverride(raw);
-                              } else {
-                                handleNumChange(setProFormaNoiOverride)(e);
-                              }
-                            }}
+                    onChange={(e) => { handleNumChange(setProFormaNoiOverride)(e); setProFormaNoiEdited(true); }}
                     onBlur={handleNumBlur(setProFormaNoiOverride)} placeholder="0" />
                   {proFormaNoiEdited ? <button onClick={() => { setProFormaNoiEdited(false); setProFormaNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
                     : (pn(proFormaIncome) || pn(proFormaExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
