@@ -176,15 +176,17 @@ function MortgageCalculator({ formatCurrency, currency }) {
   const pn = (v) => parseFloat(String(v).replace(/,/g, '')) || 0;
   const handleChange = (setter) => (e) => {
     const raw = e.target.value.replace(/,/g, '');
-    if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
-      if (raw === '' || raw === '.') { setter(raw); return; }
-      const num = parseFloat(raw);
-      if (!isNaN(num)) setter(Number.isInteger(num) ? num.toLocaleString('en-US') : raw);
-    }
+    if (raw === '' || /^\d*\.?\d*$/.test(raw)) setter(raw);
   };
   const handleBlur = (setter) => (e) => {
-    const val = parseFloat(e.target.value.replace(/,/g, ''));
-    setter(isNaN(val) ? '' : val.toLocaleString('en-US'));
+    const raw = e.target.value.replace(/,/g, '');
+    const val = parseFloat(raw);
+    if (isNaN(val)) { setter(''); return; }
+    if (raw.includes('.')) {
+      setter(raw);
+    } else {
+      setter(val.toLocaleString('en-US'));
+    }
   };
   const [homePrice, setHomePrice] = useState('400,000');
   const [downPaymentMode, setDownPaymentMode] = useState('percent');
@@ -614,15 +616,17 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
 
   const handleNumChange = (setter) => (e) => {
     const raw = e.target.value.replace(/,/g, '');
-    if (raw === '' || /^\d*\.?\d*$/.test(raw)) {
-      if (raw === '' || raw === '.') { setter(raw); return; }
-      const num = parseFloat(raw);
-      if (!isNaN(num)) setter(Number.isInteger(num) ? num.toLocaleString('en-US') : raw);
-    }
+    if (raw === '' || /^\d*\.?\d*$/.test(raw)) setter(raw);
   };
   const handleNumBlur = (setter) => (e) => {
-    const val = parseFloat(e.target.value.replace(/,/g, ''));
-    setter(isNaN(val) ? '' : val.toLocaleString('en-US'));
+    const raw = e.target.value.replace(/,/g, '');
+    const val = parseFloat(raw);
+    if (isNaN(val)) { setter(''); return; }
+    if (raw.includes('.')) {
+      setter(raw);
+    } else {
+      setter(val.toLocaleString('en-US'));
+    }
   };
 
   const getDownPayment = () => {
@@ -760,7 +764,7 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                 </div>
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
-                  <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() || '')}
+                  <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() ? Math.round(getCurrentNOI()).toLocaleString('en-US') : '')}
                     onChange={(e) => { setCurrentNoiEdited(true); handleNumChange(setCurrentNoiOverride)(e); }}
                     onBlur={handleNumBlur(setCurrentNoiOverride)} placeholder="0" />
                   {currentNoiEdited ? <button onClick={() => { setCurrentNoiEdited(false); setCurrentNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
@@ -781,7 +785,7 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                 </div>
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
-                  <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() || '')}
+                  <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() ? Math.round(getProFormaNOI()).toLocaleString('en-US') : '')}
                     onChange={(e) => { setProFormaNoiEdited(true); handleNumChange(setProFormaNoiOverride)(e); }}
                     onBlur={handleNumBlur(setProFormaNoiOverride)} placeholder="0" />
                   {proFormaNoiEdited ? <button onClick={() => { setProFormaNoiEdited(false); setProFormaNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
