@@ -25,17 +25,19 @@ export default function MortgageCalculator() {
   const fmtNum = (v) => { const n = parseFloat(String(v).replace(/,/g, '')); return isNaN(n) ? '' : n.toLocaleString('en-US'); };
   const handleChange = (setter) => (e) => {
     const raw = e.target.value.replace(/,/g, '');
-    if (raw === '' || /^\d*\.?\d*$/.test(raw)) setter(raw);
+    if (raw !== '' && !/^\d*\.?\d*$/.test(raw)) return;
+    if (raw === '' || raw === '.') { setter(raw); return; }
+    const [intPart, decPart] = raw.split('.');
+    const grouped = intPart === '' ? '' : parseInt(intPart, 10).toLocaleString('en-US');
+    setter(decPart === undefined ? grouped : grouped + '.' + decPart);
   };
   const handleBlur = (setter) => (e) => {
     const raw = e.target.value.replace(/,/g, '');
     const val = parseFloat(raw);
     if (isNaN(val)) { setter(''); return; }
-    if (raw.includes('.')) {
-      setter(raw);
-    } else {
-      setter(val.toLocaleString('en-US'));
-    }
+    const [intPart, decPart] = raw.split('.');
+    const grouped = parseInt(intPart || '0', 10).toLocaleString('en-US');
+    setter(decPart ? grouped + '.' + decPart : grouped);
   };
 
   const [homePrice, setHomePrice] = useState('400,000');
