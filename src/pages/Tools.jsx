@@ -765,7 +765,15 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
                   <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={currentNoiEdited ? currentNoiOverride : (getCurrentNOI() ? Math.round(getCurrentNOI()).toLocaleString('en-US') : '')}
-                    onChange={(e) => { setCurrentNoiEdited(true); handleNumChange(setCurrentNoiOverride)(e); }}
+                    onChange={(e) => {
+                              if (!currentNoiEdited) {
+                                setCurrentNoiEdited(true);
+                                const raw = e.target.value.replace(/,/g, '');
+                                if (raw === '' || /^\d*\.?\d*$/.test(raw)) setCurrentNoiOverride(raw);
+                              } else {
+                                handleNumChange(setCurrentNoiOverride)(e);
+                              }
+                            }}
                     onBlur={handleNumBlur(setCurrentNoiOverride)} placeholder="0" />
                   {currentNoiEdited ? <button onClick={() => { setCurrentNoiEdited(false); setCurrentNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
                     : (pn(currentIncome) || pn(currentExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
@@ -786,7 +794,15 @@ function CommercialMortgageCalculator({ formatCurrency, currency }) {
                 <div>
                   <Label className="text-gray-300 text-sm mb-2 block">NOI</Label>
                   <CommNI inputCls={inputCls} inputClsR={inputClsR} inputClsP={inputClsP} prefix={sym} value={proFormaNoiEdited ? proFormaNoiOverride : (getProFormaNOI() ? Math.round(getProFormaNOI()).toLocaleString('en-US') : '')}
-                    onChange={(e) => { setProFormaNoiEdited(true); handleNumChange(setProFormaNoiOverride)(e); }}
+                    onChange={(e) => {
+                              if (!proFormaNoiEdited) {
+                                setProFormaNoiEdited(true);
+                                const raw = e.target.value.replace(/,/g, '');
+                                if (raw === '' || /^\d*\.?\d*$/.test(raw)) setProFormaNoiOverride(raw);
+                              } else {
+                                handleNumChange(setProFormaNoiOverride)(e);
+                              }
+                            }}
                     onBlur={handleNumBlur(setProFormaNoiOverride)} placeholder="0" />
                   {proFormaNoiEdited ? <button onClick={() => { setProFormaNoiEdited(false); setProFormaNoiOverride(''); }} className="text-[#C2983B] text-xs mt-1">Reset to auto</button>
                     : (pn(proFormaIncome) || pn(proFormaExpenses)) ? <p className="text-gray-400 text-xs mt-1">Auto-calculated</p> : null}
